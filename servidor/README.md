@@ -13,6 +13,7 @@ O servidor roda na máquina do Nei e não chama nenhum serviço de fora: fala s�
 |---|---|
 | `voz_residente.py` | Chatterbox carregado uma vez (porta 7872), sai sozinho depois de 10 min parado. O servidor sobe sob demanda |
 | `inemavox.py` | Cliente do inemavox (fila de jobs): caminho lento de reserva para a transcrição |
+| `espera.py` e `gerar_espera.py` | Banca de 32 frases de espera na voz do robô (`espera/`) e a regra de escolha sem repetir |
 | `servidor.py` | Servidor HTTP na porta 8770. Só biblioteca padrão do Python (`http.server`, `urllib`, `subprocess`): nada a instalar |
 | `testar.py` | Manda um WAV ao servidor e confere a resposta (formato, volume, texto, tempos). É o validador da F1 |
 | `persona.txt` | Quem o robô é e como responde. Vira o `--system-prompt` do `claude -p` |
@@ -29,6 +30,9 @@ O servidor roda na máquina do Nei e não chama nenhum serviço de fora: fala s�
 |---|---|
 | `GET /saude` | Devolve `{"ok": true}` |
 | `POST /v1/foto` | Recebe um JPEG de até 200 kB, guarda por 60 s e devolve `{"turno": "<id>"}` |
+| `POST /v1/aquecer` | Sobe o Whisper e a voz residentes sem esperar. O robô chama ao sentir o dedo na tela |
+| `POST /v1/conversa` | **Rota principal.** Resposta em quadros: o que ouviu, frase de espera, e a resposta falada por partes (DEFINICAO.md, seção 11) |
+| `GET /v1/espera` e `/v1/espera/<id>.wav` | Banca de frases de espera, para a placa guardar |
 | `POST /v1/fala` | Recebe um WAV 16 kHz mono 16 bits (com `X-Turno` se houve foto), devolve um WAV no mesmo formato com a resposta falada |
 
 Códigos de resposta, cabeçalhos e limites: DEFINICAO.md, seção 11.
@@ -41,7 +45,13 @@ python3 servidor/servidor.py            # porta 8770; sobe o Whisper e a voz res
 python3 servidor/testar.py --limites
 python3 servidor/testar.py servidor/teste/pergunta.wav
 python3 servidor/testar.py --foto servidor/teste/foto.jpg servidor/teste/pergunta-visao.wav
+python3 servidor/testar.py --conversa servidor/teste/pergunta.wav          # por partes; meta: 1º som < 8 s
+python3 servidor/testar.py --conversa --frio servidor/teste/pergunta.wav   # aquece como o robô; meta < 20 s do toque
+python3 servidor/gerar_espera.py                                            # grava as frases de espera que faltam
 ```
+
+**O que deixa a resposta mais rápida (15/11/2026):** Whisper e voz residentes; um `claude -p` já aberto esperando a
+próxima pergunta (~1,2 s a menos); a resposta dividida em partes, com a 1ª curta, cortada sem quebrar número.
 
 **Memória:** enquanto houver conversa, o Whisper large-v3 e o Chatterbox ficam carregados na GPU. Os dois saem
 sozinhos depois de 10 min sem pedido. Eles não passam pela fila `fila-vaga gpu`.

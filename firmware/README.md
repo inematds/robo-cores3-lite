@@ -45,11 +45,13 @@ Duas camadas, para a variante Waveshare poder entrar depois trocando só a de ba
 | Cérebro | Manda a fala (e a foto) e recebe a resposta | `servidor` (opção B, HTTP) · `api` (opção A, WebSocket; só com autorização do Nei) |
 | Hardware | Tela, toque, microfone, falante, câmera | CoreS3 Lite (M5Unified + esp_camera) · depois, se pedido, Waveshare 1,54" |
 
-Fluxo da opção B:
+Fluxo da opção B (rota `/v1/conversa`, por partes; DEFINICAO.md, seção 11):
+0. Ao ligar: baixa a banca de frases de espera (`GET /v1/espera`) se mudou.
 1. Liga, conecta no Wi-Fi, chama `GET /saude`, mostra o rosto.
-2. Dedo na tela: liga o microfone e grava na PSRAM (16 kHz, 16 bits, mono), até 15 s.
+2. Dedo na tela: chama `POST /v1/aquecer`, liga o microfone e grava na PSRAM (16 kHz, 16 bits, mono), até 15 s.
 3. Dedo solto: desliga o microfone, manda a foto se houver (`POST /v1/foto`) e o WAV (`POST /v1/fala`).
-4. Resposta 200: liga o falante, toca, mostra o texto de `X-Resposta`. Toque na tela durante a fala: para.
+4. Quadros: `O` → mostra "Você disse"; `E` → toca a frase de espera da memória; `T`/`A` → legenda e toca cada parte.
+   Toque na tela durante a fala: para.
 
 Estados: `PRONTO` → `OUVINDO` → `PENSANDO` → `FALANDO` → `PRONTO`. Falha: `ERRO` por 2 s.
 

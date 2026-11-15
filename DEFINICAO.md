@@ -207,6 +207,27 @@ X-Turno: <id da foto, se houve>
 Cabeçalhos da resposta 200 (UTF-8 com codificação de URL, até 500 caracteres): `X-Ouvido`, `X-Resposta` e
 `X-Tempos` (`stt=1.2;llm=5.0;tts=8.0;total=14.6`, em segundos).
 
+**Conversa por partes (rota principal do robô, desde 15/11/2026):** `POST /v1/conversa`, mesmo pedido da `/v1/fala`.
+As recusas (401, 204, 413, 415) vêm antes, iguais. Depois do 200, o corpo é uma sequência de quadros, cada um com
+1 byte de tipo, 4 bytes de tamanho (little-endian) e os dados, enviados assim que cada etapa termina:
+
+| Tipo | Dados | Chega (medido, quente) | O robô faz |
+|---|---|---|---|
+| `E` | id de uma frase de espera (ex.: `hora-02`) | logo depois do `O` (ou antes, no caso frio) | Toca a frase guardada na memória dele |
+| `O` | o que o servidor ouviu (texto) | ~0,5 s | Mostra "Você disse: …" e o rosto de "entendi" |
+| `T` | texto de uma parte da resposta | 6,8–8,5 s a 1ª | Mostra como legenda |
+| `A` | WAV 16 kHz mono 16 bits dessa parte | junto com o `T` | Toca; as partes seguintes chegam enquanto toca |
+| `F` | JSON com a resposta inteira e os tempos | no fim | Volta a pronto |
+| `X` | JSON com o erro | se algo falhar no meio | Rosto de erro |
+
+**Aquecer:** `POST /v1/aquecer` (com o token, sem corpo) → `202 {"frio": true|false}`. O robô chama quando o dedo
+encosta na tela: se os modelos estiverem descarregados, eles sobem enquanto a pessoa fala.
+
+**Frases de espera:** `GET /v1/espera` → lista (id, categoria, texto, segundos); `GET /v1/espera/<id>.wav` → o áudio.
+O robô baixa a banca uma vez (32 frases, 3,1 MB) e toca da memória dele. Regras de escolha em `servidor/espera.py`:
+categoria pelo que a pessoa disse (hora, foto, conta, pergunta difícil, geral; saudação curta não ganha frase), nunca
+repete uma das últimas 8, pula 1 vez em 3 (nunca no caso frio).
+
 **Saúde:** `GET /saude` → `{"ok": true}`. **Limites:** fala de até 15 s (480 044 bytes); o robô espera até 90 s.
 
 **Estados:** `PRONTO` → (dedo na tela) `OUVINDO` → (soltou) `PENSANDO` → `FALANDO` → `PRONTO`.

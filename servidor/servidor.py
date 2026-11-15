@@ -13,6 +13,7 @@ import io
 import json
 import os
 import re
+import struct
 import subprocess
 import sys
 import threading
@@ -28,6 +29,7 @@ from pathlib import Path
 AQUI = Path(__file__).resolve().parent
 sys.path.insert(0, str(AQUI))
 from inemavox import Inemavox  # noqa: E402
+import espera  # noqa: E402
 
 LIMITE_FALA = 1_000_000
 LIMITE_FOTO = 200_000
@@ -76,6 +78,9 @@ TURNO = threading.Lock()   # um turno por vez: a GPU é uma só
 FOTOS = {}                 # turno -> (instante, caminho)
 FOTOS_TRAVA = threading.Lock()
 INEMAVOX = Inemavox(CFG["INEMAVOX_URL"])
+ESCOLHEDOR = espera.Escolhedor()
+PASTA_ESPERA = AQUI / "espera"
+SUBINDO = {"whisper": threading.Lock(), "voz": threading.Lock()}  # um processo de cada, nunca dois
 
 
 class Recusa(Exception):
@@ -98,18 +103,38 @@ def _no_ar(url):
         return False
 
 
-def garantir(url, comando, nome, espera=120):
+def garantir(url, comando, nome, espera_max=120):
     if _no_ar(url):
         return 0.0
     t = time.time()
-    log(f"subindo {nome}")
-    with open(DADOS / f"{nome}.log", "ab") as saida:
-        subprocess.Popen(comando, stdout=saida, stderr=subprocess.STDOUT, start_new_session=True)
-    while time.time() - t < espera:
+    with SUBINDO[nome]:          # quem chega depois espera o primeiro terminar de subir
         if _no_ar(url):
             return time.time() - t
-        time.sleep(1)
+        log(f"subindo {nome}")
+        with open(DADOS / f"{nome}.log", "ab") as saida:
+            subprocess.Popen(comando, stdout=saida, stderr=subprocess.STDOUT, start_new_session=True)
+        while time.time() - t < espera_max:
+            if _no_ar(url):
+                return time.time() - t
+            time.sleep(0.5)
     raise Recusa(503, nome)
+
+
+def frio():
+    return not (_no_ar(CFG["WHISPER_DAEMON_URL"]) and _no_ar(CFG["VOZ_URL"]))
+
+
+def aquecer():
+    """Sobe Whisper e voz em paralelo, sem esperar. O robô chama ao sentir o dedo na tela."""
+    for f in (garantir_whisper, garantir_voz):
+        threading.Thread(target=lambda f=f: _sem_erro(f), daemon=True).start()
+
+
+def _sem_erro(f):
+    try:
+        f()
+    except Exception as e:  # noqa: BLE001
+        log(f"aquecer: {e}")
 
 
 def garantir_whisper():
@@ -179,6 +204,43 @@ def guardar_historico(robo, ouvido, resposta):
     arq.write_text(json.dumps(trocas[-50:], ensure_ascii=False, indent=1))
 
 
+class ClaudePronto:
+    """Um `claude -p` já aberto esperando a próxima pergunta: a partida do processo sai da espera (~1,2 s).
+
+    Sempre pela assinatura (sem ANTHROPIC_API_KEY), sem ferramentas, sem MCP, sem sessão salva, numa pasta vazia.
+    """
+    def __init__(self):
+        self.trava = threading.Lock()
+        self.proc = None
+
+    def _abrir(self):
+        env = {k: v for k, v in os.environ.items() if k != "ANTHROPIC_API_KEY"}
+        cmd = ["claude", "-p", "--model", CFG["CLAUDE_MODELO"], "--tools", "", "--strict-mcp-config",
+               "--no-session-persistence", "--input-format", "stream-json", "--output-format", "stream-json",
+               "--verbose", "--system-prompt", (AQUI / "persona.txt").read_text()]
+        return subprocess.Popen(cmd, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+                                text=True, cwd=VAZIO, env=env, start_new_session=True)
+
+    def pegar(self):
+        with self.trava:
+            proc, self.proc = self.proc, None
+        if proc is None or proc.poll() is not None:
+            proc = self._abrir()
+        return proc
+
+    def repor(self):
+        def abrir():
+            novo = self._abrir()
+            with self.trava:
+                velho, self.proc = self.proc, novo
+            if velho is not None and velho.poll() is None:
+                velho.kill()
+        threading.Thread(target=abrir, daemon=True).start()
+
+
+CLAUDE = ClaudePronto()
+
+
 def pensar(robo, ouvido, foto):
     n = int(CFG["HISTORICO_TURNOS"])
     linhas = [f"Agora: {datetime.now():%d/%m/%Y %H:%M} (horário de Brasília)."]
@@ -195,11 +257,12 @@ def pensar(robo, ouvido, foto):
     conteudo.append({"type": "text", "text": "\n".join(linhas)})
     entrada = json.dumps({"type": "user", "message": {"role": "user", "content": conteudo}}, ensure_ascii=False)
 
-    env = {k: v for k, v in os.environ.items() if k != "ANTHROPIC_API_KEY"}
-    cmd = ["claude", "-p", "--model", CFG["CLAUDE_MODELO"], "--tools", "", "--strict-mcp-config",
-           "--no-session-persistence", "--input-format", "stream-json", "--output-format", "stream-json",
-           "--verbose", "--system-prompt", (AQUI / "persona.txt").read_text()]
-    r = subprocess.run(cmd, input=entrada, capture_output=True, text=True, cwd=VAZIO, env=env, timeout=90)
+    proc = CLAUDE.pegar()
+    try:
+        saida, erro = proc.communicate(entrada + "\n", timeout=90)
+    finally:
+        CLAUDE.repor()
+    r = subprocess.CompletedProcess(proc.args, proc.returncode, saida, erro)
     for linha in r.stdout.splitlines():
         try:
             d = json.loads(linha)
@@ -219,21 +282,63 @@ def limpar_fala(texto):
     return texto[:600]
 
 
-def falar(texto, pasta):
+NUMEROS = set("""zero um uma dois duas tres três quatro cinco seis sete oito nove dez onze doze treze catorze quatorze
+quinze dezesseis dezessete dezoito dezenove vinte trinta quarenta cinquenta sessenta setenta oitenta noventa cem cento
+duzentos trezentos quatrocentos quinhentos seiscentos setecentos oitocentos novecentos mil milhao milhão milhoes milhões
+meia meio""".split())
+NAO_CORTAR = NUMEROS | {"e", "de", "da", "do", "das", "dos", "a", "o", "as", "os", "um", "uma", "em", "no", "na"}
+
+
+def _corte_seguro(frase, depois_de):
+    """Primeiro espaço depois de `depois_de` que não fica no meio de um número nem antes de artigo/preposição."""
+    palavras = frase.split(" ")
+    pos = 0
+    for i, p in enumerate(palavras[:-1]):
+        pos += len(p) + 1
+        if pos < depois_de or len(frase) - pos < 15:
+            continue
+        atual = p.lower().strip(",.;:")
+        seguinte = palavras[i + 1].lower().strip(",.;:")
+        if atual not in NAO_CORTAR and seguinte not in NUMEROS and seguinte != "e":
+            return pos
+    return None
+
+
+def partes(texto, minimo=30):
+    """Divide a resposta em frases para a voz começar pela primeira. Frase curta junta com a seguinte."""
+    pedacos = [p.strip() for p in re.split(r"(?<=[.!?…])\s+", texto) if p.strip()]
+    # A primeira parte decide quando sai o primeiro som: se for longa, corta na primeira vírgula.
+    # Ordem: vírgula/dois-pontos/ponto e vírgula entre o 10º e o 60º caractere; senão, o espaço depois do 35º.
+    if pedacos and len(pedacos[0]) > 50:
+        m = re.search(r"[,:;]\s", pedacos[0][10:60])
+        corte = 10 + m.end() if m else None
+        if corte is None:
+            corte = _corte_seguro(pedacos[0], 35)
+        if corte:
+            pedacos[0:1] = [pedacos[0][:corte].strip(), pedacos[0][corte:].strip()]
+    saida = []
+    for p in pedacos:
+        if len(saida) > 1 and len(saida[-1]) < minimo:
+            saida[-1] += " " + p
+        else:
+            saida.append(p)
+    return saida or [texto]
+
+
+def falar(texto, pasta, nome="resposta"):
     garantir_voz()
-    bruto = pasta / "resposta-24k.wav"
+    bruto = pasta / f"{nome}-24k.wav"
     r = _post_json(CFG["VOZ_URL"] + "/falar", {"texto": texto, "ref": CFG["VOZ_REF"], "saida": str(bruto), "lang": "pt"}, 120)
     if not r.get("ok"):
         raise Recusa(500, "voz")
-    final = pasta / "resposta.wav"
+    final = pasta / f"{nome}.wav"
     subprocess.run(["ffmpeg", "-loglevel", "error", "-y", "-i", str(bruto), "-ar", "16000", "-ac", "1",
                     "-c:a", "pcm_s16le", str(final)], check=True, timeout=60)
     return final
 
 
-def turno(robo, dados, turno_foto):
-    tempos = {}
-    t0 = time.time()
+def preparar(dados, turno_foto):
+    """Confere o WAV e acha a foto. Tudo que pode recusar o pedido acontece aqui, antes de responder."""
     pasta = DADOS / "turnos" / f"{datetime.now():%Y%m%d-%H%M%S}-{uuid.uuid4().hex[:4]}"
     pasta.mkdir(parents=True)
     pergunta = pasta / "pergunta.wav"
@@ -255,6 +360,14 @@ def turno(robo, dados, turno_foto):
         if achado and time.time() - achado[0] <= float(CFG["FOTO_VALIDADE"]):
             foto = pasta / "foto.jpg"
             foto.write_bytes(Path(achado[1]).read_bytes())
+    return pasta, pergunta, foto
+
+
+def turno(robo, dados, turno_foto):
+    """/v1/fala: um WAV inteiro de volta (simples; usado nos testes e como reserva)."""
+    tempos = {}
+    t0 = time.time()
+    pasta, pergunta, foto = preparar(dados, turno_foto)
 
     with TURNO:
         t = time.time()
@@ -274,6 +387,68 @@ def turno(robo, dados, turno_foto):
                                                   "foto": bool(foto), "tempos": tempos}, ensure_ascii=False, indent=1))
     log(f"OUVIDO: {ouvido} | RESPOSTA: {resposta} | " + " ".join(f"{k}={v:.1f}" for k, v in tempos.items()))
     return ouvido, resposta, tempos, wav.read_bytes()
+
+
+def registrar(pasta, robo, ouvido, resposta, foto, tempos, extra=None):
+    guardar_historico(robo, ouvido, resposta)
+    info = {"robo": robo, "ouvido": ouvido, "resposta": resposta, "foto": bool(foto), "tempos": tempos}
+    info.update(extra or {})
+    (pasta / "turno.json").write_text(json.dumps(info, ensure_ascii=False, indent=1))
+    log(f"OUVIDO: {ouvido} | RESPOSTA: {resposta} | " + " ".join(f"{k}={v:.1f}" for k, v in tempos.items()))
+
+
+def quadro(tipo, dados):
+    """Um quadro do fluxo /v1/conversa: 1 byte de tipo + 4 bytes de tamanho (little-endian) + dados."""
+    if isinstance(dados, str):
+        dados = dados.encode("utf-8")
+    elif isinstance(dados, (dict, list)):
+        dados = json.dumps(dados, ensure_ascii=False).encode("utf-8")
+    return tipo.encode() + struct.pack("<I", len(dados)) + dados
+
+
+def conversa(robo, pasta, pergunta, foto, enviar, t0):
+    """/v1/conversa: manda os quadros assim que cada etapa termina.
+
+    O = o que ouviu · E = frase de espera (id da banca) · T = texto de uma parte · A = WAV dessa parte · F = fim.
+    """
+    tempos = {}
+    espera_usada = None
+    with TURNO:
+        if frio():
+            aquecer()
+            escolha = ESCOLHEDOR.escolher(robo, "frio", frio=True)
+            if escolha:
+                espera_usada = escolha
+                enviar(quadro("E", escolha[0]))
+        t = time.time()
+        ouvido = transcrever(pergunta)
+        tempos["stt"] = time.time() - t
+        if not re.search(r"\w", ouvido):
+            enviar(quadro("F", {"vazio": True}))
+            return
+        enviar(quadro("O", ouvido))
+        tempos["ouvido_em"] = time.time() - t0
+        if espera_usada is None:
+            escolha = ESCOLHEDOR.escolher(robo, espera.categoria(ouvido, bool(foto)))
+            if escolha:
+                espera_usada = escolha
+                enviar(quadro("E", escolha[0]))
+        t = time.time()
+        resposta = pensar(robo, ouvido, foto)
+        tempos["llm"] = time.time() - t
+        t = time.time()
+        for n, parte in enumerate(partes(resposta), 1):
+            wav = falar(parte, pasta, f"resposta-{n}")
+            enviar(quadro("T", parte))
+            enviar(quadro("A", wav.read_bytes()))
+            if n == 1:
+                tempos["primeiro_som"] = time.time() - t0
+        tempos["tts"] = time.time() - t
+    tempos["total"] = time.time() - t0
+    enviar(quadro("F", {"resposta": resposta, "tempos": {k: round(v, 2) for k, v in tempos.items()},
+                        "espera": espera_usada[0] if espera_usada else None}))
+    registrar(pasta, robo, ouvido, resposta, foto, tempos,
+              {"espera": espera_usada[1] if espera_usada else None, "partes": len(partes(resposta))})
 
 
 # ---------- HTTP ----------
@@ -322,16 +497,53 @@ class Robo(BaseHTTPRequestHandler):
     def do_GET(self):
         if self.path == "/saude":
             return self._responder(200, b'{"ok": true}')
+        if self.path.startswith("/v1/espera"):
+            if not self._token_ok():
+                return self._erro(401, "token")
+            if self.path == "/v1/espera":   # a placa baixa a banca uma vez e guarda na memória dela
+                return self._responder(200, (PASTA_ESPERA / "espera.json").read_bytes())
+            m = re.fullmatch(r"/v1/espera/([a-z]+-\d{2})\.wav", self.path)
+            if m and (PASTA_ESPERA / f"{m.group(1)}.wav").exists():
+                return self._responder(200, (PASTA_ESPERA / f"{m.group(1)}.wav").read_bytes(), "audio/wav")
         self._erro(404, "rota")
 
     def do_POST(self):
         robo = re.sub(r"[^A-Za-z0-9_-]", "", self.headers.get("X-Robo-Id", "robo"))[:32] or "robo"
         try:
-            if self.path not in ("/v1/fala", "/v1/foto"):
+            if self.path not in ("/v1/fala", "/v1/foto", "/v1/conversa", "/v1/aquecer"):
                 raise Recusa(404, "rota")
             if not self._token_ok():
                 self._corpo(LIMITE_FALA * 3)
                 raise Recusa(401, "token")
+            if self.path == "/v1/aquecer":
+                self._corpo(1024)
+                estava_frio = frio()
+                if estava_frio:
+                    aquecer()
+                return self._responder(202, json.dumps({"frio": estava_frio}).encode())
+            if self.path == "/v1/conversa":
+                dados = self._corpo(LIMITE_FALA)
+                t0 = time.time()
+                pasta, pergunta, foto = preparar(dados, self.headers.get("X-Turno"))
+                self.send_response(200)
+                self.send_header("Content-Type", "application/x-robo-quadros")
+                self.send_header("Connection", "close")
+                self.end_headers()
+                self.close_connection = True
+
+                def enviar(b):
+                    self.wfile.write(b)
+                    self.wfile.flush()
+                try:
+                    conversa(robo, pasta, pergunta, foto, enviar, t0)
+                except Exception as e:  # noqa: BLE001  — o 200 já saiu: o erro vai num quadro X
+                    erro = e.erro if isinstance(e, Recusa) else "servidor"
+                    log(f"/v1/conversa erro no meio: {type(e).__name__}: {e}")
+                    try:
+                        enviar(quadro("X", {"erro": erro}))
+                    except OSError:
+                        pass
+                return
             if self.path == "/v1/foto":
                 dados = self._corpo(LIMITE_FOTO)
                 if dados[:3] != b"\xff\xd8\xff":
@@ -363,6 +575,7 @@ class Robo(BaseHTTPRequestHandler):
 def main():
     porta = int(CFG["ROBO_PORTA"])
     srv = ThreadingHTTPServer(("0.0.0.0", porta), Robo)
+    CLAUDE.repor()   # o primeiro claude -p já fica aberto esperando
     log(f"robo-cores3-lite ouvindo na porta {porta} (voz: {Path(CFG['VOZ_REF']).stem}, modelo: {CFG['CLAUDE_MODELO']})")
     srv.serve_forever()
 

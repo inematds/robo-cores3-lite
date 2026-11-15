@@ -55,10 +55,24 @@ Pronto quando, com o servidor no ar (`python3 servidor/servidor.py`):
 Meta de tempo: resposta de uma frase em até 20 s com os modelos carregados. É meta, não medida. Se passar de 20 s,
 registrar onde o tempo foi gasto e levar ao Nei antes da F2.
 
+## F1b — Amortecer a espera (pedido do Nei, 15/11/2026)
+
+Pronta em 15/11/2026. Rota `/v1/conversa` por partes, `/v1/aquecer`, banca de 32 frases de espera na voz `rachel`.
+
+| # | Comando | Resultado |
+|---|---|---|
+| 1 | `python3 servidor/testar.py --conversa servidor/teste/pergunta.wav` (5 vezes, com foto numa) | 1º som em 6,8 a 8,5 s (meta 8 s: 3 de 5 abaixo; antes, 10 a 14 s) |
+| 2 | `python3 servidor/testar.py --conversa --frio servidor/teste/pergunta.wav` | 1º som 19,4 s depois do toque (meta 20 s; antes, 33 s) |
+| 3 | 30 perguntas simuladas no `espera.Escolhedor` | Nenhuma frase repetida em 8 seguidas; 44% puladas; saudação sem frase |
+
+Piso medido: a voz leva ~3 s até para uma frase curta e o Claude ~3,3 s; abaixo de uns 7 s não desce sem trocar a
+voz. As animações do rosto ficam para a F2.
+
 ## F2 — O robô conversa pela opção B
 
 O que fazer: instalar `M5Unified` e `M5GFX` (avisar o Nei antes: é download novo) e escrever o firmware em
-`firmware/robo_fala/`: rosto, segurar para falar, gravar, enviar, tocar, legenda.
+`firmware/robo_fala/`: rosto, segurar para falar (chamando `/v1/aquecer` no toque), gravar, enviar por
+`/v1/conversa`, tocar as partes e as frases de espera (banca baixada de `/v1/espera`), legenda.
 
 Pronto quando:
 

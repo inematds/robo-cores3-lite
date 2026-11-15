@@ -8,8 +8,9 @@ Duas opções de "cérebro":
 - **Opção A: direto numa API** de voz em tempo real (Gemini Live ou OpenAI Realtime). Só desenho: nada é chamado sem
   autorização do Nei.
 
-**Estado em 15/11/2026: servidor da opção B pronto (F1), placa não comprada.** Resposta em 10 a 14 s com os
-modelos carregados, 33 s na primeira depois de 10 min parado; a foto também funciona. O firmware é um esqueleto
+**Estado em 15/11/2026: servidor da opção B pronto (F1), placa não comprada.** Com a resposta por partes, o
+primeiro som sai em 6,8 a 8,5 s, e uma frase de espera ("deixa eu ver o relógio…") cobre o silêncio; 19 s na
+primeira depois de 10 min parado; a foto também funciona. O firmware é um esqueleto
 que compila e mostra a PSRAM.
 
 | Para | Onde |
@@ -41,6 +42,7 @@ Legenda: 🧠 sessão com o Nei · ⚙️ comando/script · 🤖 `claude -p`
 | 3 | Copiar o `.env` do servidor e escolher o token | `cp servidor/env.exemplo servidor/.env` | 🧠 | sim |
 | 4 | Subir o servidor (opção B); ele sobe o Whisper e a voz residentes | `python3 servidor/servidor.py` | ⚙️ | sim |
 | 5 | Testar o servidor sem o robô, com e sem foto | `python3 servidor/testar.py servidor/teste/pergunta.wav` (e `--foto`, `--limites`) | ⚙️ | sim |
+| 5b | Gravar as frases de espera na voz do robô (só uma vez, ou ao trocar a voz) | `python3 servidor/gerar_espera.py` | ⚙️ | sim (32 frases) |
 | 6 | Dentro de cada turno: escrever a resposta | `claude -p --model haiku --tools "" --strict-mcp-config --no-session-persistence …` | 🤖 | comando testado |
 | 7 | Instalar as bibliotecas da placa (avisar o Nei) | `arduino-cli lib install M5Unified M5GFX` | ⚙️ | não: fase F2 |
 | 8 | Preencher Wi-Fi, servidor, token e cérebro | `cp firmware/robo_fala/segredos.exemplo.h firmware/robo_fala/segredos.h` | 🧠 | sim |
