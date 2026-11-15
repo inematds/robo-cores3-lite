@@ -55,3 +55,5 @@ lives6: feito https://www.youtube.com/watch?v=ckhcNbClXNs
 - Publicado direto com o yt-pubx em 15/11/2026 02:49 (exceção de 05/11: a entrega precisava do link); não entrou na fila.
 - v3: msg 4779. Telegram: resposta no tópico 2986, msgs 3023–3024 — https://t.me/c/2412734678/3024
 - Guia: seção `#video` (embed vertical) nos 3 idiomas; linha "🎬 Vídeo" nos 3 READMEs.
+- Portal: quadro "Últimas Atualizações de Vídeos" + série de shorts em /videos/ (portal `162d5d9`); MP4 na release
+  https://github.com/inematds/robo-cores3-lite/releases/tag/video-v1.0.0
