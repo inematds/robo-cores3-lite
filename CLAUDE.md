@@ -5,7 +5,7 @@ microfones, falante, bateria). Conversa por voz, mostra rosto e legenda, enxerga
 Duas opções de cérebro: **B, servidor local** (padrão) e **A, direto numa API** (só com autorização do Nei).
 Pedidos do Nei, literais, na DEFINICAO.md, seção 1. Em 15/11/2026: "foca na lite".
 
-- Repo futuro: `inematds/robo-cores3-lite`. **Hoje é só local: sem remoto, sem push, até o Nei mandar.**
+- Repo: `inematds/robo-cores3-lite`, público desde 15/11/2026 (ordem do Nei: "publica o projeto no portal e no inema.robot e no lives6"). Guia em `guia/`, publicação registrada em `PUBLICACAO.md`.
 - Autor dos commits: `inematds <inematds@gmail.com>` (já configurado neste repo).
 - A versão anterior (XIAO soldada, cubo de 40 mm) está em `arquivo/variante-xiao/`. Só referência.
 - Projeto separado do `~/projetos/robos-impressos`. De lá só se lê e se copia.

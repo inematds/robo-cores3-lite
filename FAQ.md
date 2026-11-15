@@ -28,7 +28,7 @@ O Claude por API não é opção: Claude só pela assinatura, e a assinatura só
 
 | Placa | Câmera | Observação |
 |---|---|---|
-| CoreS3 Lite | sim (GC0308) | Escolhida. R$ 255,55 na loja oficial, lido em 15/11, sem frete nem imposto |
+| CoreS3 Lite | sim (GC0308) | Escolhida. R$ 256,55 na loja oficial, lido em 15/11, sem frete nem imposto |
 | CoreS3 completa | sim | US$ 15 a mais de tabela, por bateria maior e base DIN |
 | CoreS3 SE | **não** | Atenção: o "SE" é a versão sem câmera e sem sensores |
 | Waveshare ESP32-S3-LCD-1.54 | não | Menor; fica como variante futura só de voz |
@@ -38,7 +38,7 @@ Para prender a placa em trilho de painel elétrico (o mesmo dos disjuntores) e l
 mesa não precisa dela.
 
 **Tem anúncio mais barato ou com frete grátis?**
-Em 15/11, entre 53 anúncios da busca do AliExpress, a loja oficial (R$ 255,55) foi a mais barata. O mais barato com
+Em 15/11, entre 53 anúncios da busca do AliExpress, a loja oficial (R$ 256,55) foi a mais barata. O mais barato com
 frete grátis custava R$ 384,88. Imposto de importação e ICMS ainda entram: total estimado de R$ 360–380, não conferido.
 
 **Dá para fazer as duas placas (Lite e Waveshare) ao mesmo tempo?**

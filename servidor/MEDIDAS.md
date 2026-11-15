@@ -26,7 +26,7 @@ Notas (15/11/2026):
 | 15/11/2026 01:25:15 | pergunta.wav | não | 0.5 | 4.0 | 5.3 | 9.9 | Que horas são em Tóquio? |
 | 15/11/2026 01:25:46 | conversa fria pergunta.wav | não | 7.48 | 4.75 | 9.88 | 22.15 (1º som 15.79) | frio-04 |
 
-Notas da F1b (15/11/2026, /v1/conversa): "1º som" = do envio até o primeiro áudio da resposta. Quente: 6,8 a 8,5 s.
+Notas da F1b (15/11/2026, /v1/conversa): "1º som" = do envio até o primeiro áudio da resposta. Quente: 6,8 a 7,6 s nas seis linhas da tabela (o PLANO.md registra até 8,5 s em rodadas que não viraram linha aqui).
 Frio com /v1/aquecer chamado no toque e 3,6 s de fala: 15,8 s depois do envio, 19,4 s depois do toque. A frase de
 espera, quando sai, chega em ~0,6 s (ou na hora, no caso frio).
 | 15/11/2026 01:42:24 | conversa pergunta-visao.wav | sim | 0.42 | 4.1 | 8.86 | 13.41 (1º som 7.36) | foto-04 |

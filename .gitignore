@@ -17,3 +17,5 @@ firmware/**/build/
 # CAD: temporários
 .preview/
 servidor/teste/resposta-conversa.wav
+guia/assets/_logs/
+guia/assets/*.codex.log
