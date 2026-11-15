@@ -1,7 +1,8 @@
 # servidor — a parte que entende, pensa e fala
 
 **Ainda não existe código aqui.** Este arquivo diz o que vai ter e dá a receita da fase F1 do
-[PLANO.md](../PLANO.md). O protocolo completo está na [DEFINICAO.md](../DEFINICAO.md), seção 11.
+[PLANO.md](../PLANO.md). O protocolo completo está na [DEFINICAO.md](../DEFINICAO.md), seção 11. Este servidor é a **opção B** do robô
+(a opção A, direto numa API, está na seção 10 e não passa por aqui, a não ser na variante A2).
 
 O servidor roda na máquina do Nei e não chama nenhum serviço de fora: fala só com `127.0.0.1`.
 
@@ -15,6 +16,7 @@ O servidor roda na máquina do Nei e não chama nenhum serviço de fora: fala s�
 | `env.exemplo` | Modelo do `.env` (já existe) |
 | `.env` | Suas configurações e o token. Fora do git |
 | `teste/pergunta.wav` | Gravação de teste, 5 s |
+| `teste/pergunta-visao.wav` e `teste/foto.jpg` | Teste de pergunta com foto ("o que você está vendo?") |
 | `dados/` | Turnos gravados e histórico da conversa. Fora do git |
 | `MEDIDAS.md` | Tempos medidos de cada etapa, com data |
 
@@ -23,7 +25,8 @@ O servidor roda na máquina do Nei e não chama nenhum serviço de fora: fala s�
 | Rota | O que faz |
 |---|---|
 | `GET /saude` | Devolve `{"ok": true}` |
-| `POST /v1/fala` | Recebe um WAV 16 kHz mono 16 bits, devolve um WAV no mesmo formato com a resposta falada |
+| `POST /v1/foto` | Recebe um JPEG de até 200 kB, guarda por 60 s e devolve `{"turno": "<id>"}` |
+| `POST /v1/fala` | Recebe um WAV 16 kHz mono 16 bits (com `X-Turno` se houve foto), devolve um WAV no mesmo formato com a resposta falada |
 
 Códigos de resposta, cabeçalhos e limites: DEFINICAO.md, seção 11.
 
@@ -49,6 +52,9 @@ Códigos de resposta, cabeçalhos e limites: DEFINICAO.md, seção 11.
      --system-prompt "$(cat ../../persona.txt)" "<histórico curto + fala de agora>"
    ```
    Testado em 14/11/2026 com uma pergunta curta: respondeu em 5,0 s.
+   **Com foto (`X-Turno`):** a imagem precisa chegar ao Claude sem liberar ferramentas. Candidato, não testado:
+   `--input-format stream-json --output-format stream-json` com uma mensagem que leva um bloco de imagem em base64.
+   A F1 prova (teste 6). Se só funcionar liberando uma ferramenta, parar e levar ao Nei.
 4. **Gera a voz** pelo inemavox, com o Chatterbox local: `POST /api/jobs/tts/upload` com o WAV de referência da
    voz em `file` e `config_json` com `{"text": "<resposta>", "lang": "pt"}`. Acompanhar em `GET /api/jobs/{id}`.
    Áudio em `GET /api/jobs/{id}/audio`.

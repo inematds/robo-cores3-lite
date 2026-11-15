@@ -1,5 +1,8 @@
 # cad — a caixa do robô
 
+> **Arquivado em 15/11/2026.** O projeto trocou para a placa pronta M5Stack CoreS3 Lite (ver `../../../DEFINICAO.md`).
+> Este arquivo descreve a variante antiga, XIAO ESP32S3 soldada num cubo impresso de 40 mm. Só referência.
+
 **Hoje só existe a conta do tamanho.** O modelo 3D da caixa é a fase F4 do [PLANO.md](../PLANO.md).
 
 | Arquivo | O que é |

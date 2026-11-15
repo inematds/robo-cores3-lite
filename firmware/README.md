@@ -1,62 +1,60 @@
-# firmware — o programa do ESP32
+# firmware — o programa da CoreS3 Lite
 
-**Hoje só existe o esqueleto:** `robo_fala/robo_fala.ino` pisca o LED e mostra o tamanho da PSRAM. Ele compila
-(conferido em 14/11/2026: 277 587 bytes, 8% do espaço). Gravar, enviar e tocar entram nas fases F2 e F3 do
-[PLANO.md](../PLANO.md). Pinos e protocolo: [DEFINICAO.md](../DEFINICAO.md), seções 9 e 11.
+**Hoje só existe o esqueleto:** `robo_fala/robo_fala.ino` mostra o tamanho da PSRAM pela serial. Ele compila
+para a placa `m5stack_cores3` (conferido em 15/11/2026: 300 492 bytes, 9% do espaço). Não foi gravado numa placa:
+ela ainda não chegou. Rosto, voz e câmera entram nas fases F2 a F4 do [PLANO.md](../PLANO.md).
 
-## Ferramenta escolhida: Arduino pelo `arduino-cli`
+## Ferramenta: Arduino pelo `arduino-cli`
 
-| Opção | Estado nesta máquina | Decisão |
-|---|---|---|
-| **Arduino (core `esp32:esp32` 3.3.12) pelo `arduino-cli` 1.5.1** | Instalado. A placa `XIAO_ESP32S3` já aparece | **Escolhida:** nada a instalar, roda por comando, as bibliotecas necessárias vêm no core |
-| PlatformIO | Não instalado | Fica de fora: seria uma instalação a mais para o mesmo resultado |
-| ESP-IDF | Não instalado | Fica de fora: mais controle do áudio, mas instalação grande e código mais longo. Só se o Arduino não der conta |
-
-Bibliotecas, todas dentro do core instalado: `WiFi`, `HTTPClient`, `ESP_I2S` (microfone e amplificador; exemplo
-`Record_to_WAV`) e, se a palavra de ativação entrar um dia, `ESP_SR` (não testada).
+- Core `esp32:esp32` 3.3.12, já instalado. A placa `M5CoreS3` (`esp32:esp32:m5stack_cores3`) já existe nele.
+- PSRAM: a placa vem com `PSRAM=enabled` (QSPI) por padrão, lido no `boards.txt`. **Não verificado na Lite.**
+  Se a serial mostrar `PSRAM: 0`, compilar com `:PSRAM=opi`.
+- Bibliotecas da F2: `M5Unified` e `M5GFX` (tela, toque, microfone, falante, energia). **Não instaladas:**
+  `arduino-cli lib install M5Unified M5GFX` é download novo, avisar o Nei antes.
+- Câmera (F4): `esp_camera`, que já vem no core (`espressif__esp32-camera`). A M5Unified não cuida da câmera.
 
 ## Comandos
 
 ```
 # compilar (na raiz do repo)
-arduino-cli compile --fqbn esp32:esp32:XIAO_ESP32S3:PSRAM=opi firmware/robo_fala
+arduino-cli compile --fqbn esp32:esp32:m5stack_cores3 firmware/robo_fala
 
 # descobrir a porta da placa
 arduino-cli board list
 
 # gravar
-arduino-cli upload --fqbn esp32:esp32:XIAO_ESP32S3:PSRAM=opi -p /dev/ttyACM0 firmware/robo_fala
+arduino-cli upload --fqbn esp32:esp32:m5stack_cores3 -p /dev/ttyACM0 firmware/robo_fala
 
 # ver as mensagens
 arduino-cli monitor -p /dev/ttyACM0 -c baudrate=115200
 ```
 
-**`PSRAM=opi` é obrigatório.** O padrão da placa no `arduino-cli` é PSRAM desligada. Sem essa opção o programa
-compila, mas a gravação da fala (até 480 kB) não cabe na memória. O esqueleto avisa pela serial quando a PSRAM
-está desligada.
-
-Os comandos de gravar e de monitor não foram testados: ainda não há placa.
+Gravar e monitor: não testados, sem placa.
 
 ## Segredos
 
-Copie `robo_fala/segredos.exemplo.h` para `robo_fala/segredos.h` e preencha a rede Wi-Fi, o endereço do servidor e o
-token. O `segredos.h` está no `.gitignore`.
+Copie `robo_fala/segredos.exemplo.h` para `robo_fala/segredos.h` e preencha Wi-Fi, servidor, token e o cérebro
+escolhido. O `segredos.h` está no `.gitignore`.
 
-## O que o firmware vai fazer (F2 e F3)
+## O que o firmware vai fazer
 
-1. Liga, conecta no Wi-Fi e chama `GET /saude`.
-2. Botão apertado: grava do INMP441 para um bloco da PSRAM (16 kHz, 16 bits, mono), até 15 s.
-3. Botão solto: escreve o cabeçalho WAV e manda com `POST /v1/fala`.
-4. Resposta 200: lê o WAV aos pedaços e manda para o MAX98357A enquanto chega.
-5. LED da placa (GPIO21) mostra o estado: pronto, gravando, pensando, falando, erro.
+Duas camadas, para a variante Waveshare poder entrar depois trocando só a de baixo:
 
-Estados: `PRONTO` → `GRAVANDO` → `PENSANDO` → `FALANDO` → `PRONTO`. Falha: `ERRO` por 2 s e volta a `PRONTO`.
+| Camada | O que faz | Implementações |
+|---|---|---|
+| Cérebro | Manda a fala (e a foto) e recebe a resposta | `servidor` (opção B, HTTP) · `api` (opção A, WebSocket; só com autorização do Nei) |
+| Hardware | Tela, toque, microfone, falante, câmera | CoreS3 Lite (M5Unified + esp_camera) · depois, se pedido, Waveshare 1,54" |
+
+Fluxo da opção B:
+1. Liga, conecta no Wi-Fi, chama `GET /saude`, mostra o rosto.
+2. Dedo na tela: liga o microfone e grava na PSRAM (16 kHz, 16 bits, mono), até 15 s.
+3. Dedo solto: desliga o microfone, manda a foto se houver (`POST /v1/foto`) e o WAV (`POST /v1/fala`).
+4. Resposta 200: liga o falante, toca, mostra o texto de `X-Resposta`. Toque na tela durante a fala: para.
+
+Estados: `PRONTO` → `OUVINDO` → `PENSANDO` → `FALANDO` → `PRONTO`. Falha: `ERRO` por 2 s.
 
 ## Pontos de atenção
 
-- O INMP441 costuma entregar 24 bits dentro de palavras de 32 (dito de memória: a ficha não foi lida, veja a
-  DEFINICAO.md, seção 14). O firmware converte para 16 bits antes de guardar. O deslocamento certo se acerta na
-  bancada, olhando o volume da gravação (teste 5 da F2).
-- Se o amplificador estalar ao ligar e desligar, manter o I²S aberto mandando silêncio.
-- Com a XIAO Sense (plano B), o microfone é PDM nos GPIO 42 (relógio) e 41 (dado): muda o modo do `ESP_I2S`.
-- O programa só usa o Wi-Fi de 2,4 GHz (a placa não tem 5 GHz).
+- **Microfone e falante dividem o mesmo barramento I²S** na CoreS3. Nunca ligados juntos: `M5.Mic.end()` antes de
+  `M5.Speaker.begin()` e o contrário, com uma pausa de 200 a 500 ms (DEFINICAO.md, seção 6).
+- O programa só usa Wi-Fi de 2,4 GHz.

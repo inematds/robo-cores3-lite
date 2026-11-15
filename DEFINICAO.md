@@ -1,345 +1,247 @@
-# DEFINICAO — robô ESP32 que só fala
+# DEFINICAO — robo-cores3-lite
 
-Escrita em 14/11/2026. Nada foi comprado, soldado, impresso nem programado. Este arquivo é o ponto de partida.
+Reescrita em 15/11/2026, quando o projeto trocou de placa. Nada foi comprado nem gravado numa placa ainda.
+A versão anterior (XIAO ESP32S3 soldada num cubo impresso de 40 mm) está guardada em
+[arquivo/variante-xiao/](arquivo/variante-xiao/DEFINICAO.md).
 
 ## 1. Objetivo
 
-Um cubo de mesa, o menor possível, com um ESP32 dentro. Você aperta o botão, fala, e ele responde com voz.
-O ESP32 só grava e toca: quem entende, pensa e gera a voz é um servidor local na sua máquina, sem API externa.
-Sem motor, sem servo, sem rodas.
+Um robô de mesa quadrado, sem movimento, que conversa com você por voz, mostra um rosto e o texto na tela e
+enxerga pela câmera. A placa é a **M5Stack CoreS3 Lite**, que já vem pronta: tela, câmera, microfones, falante,
+bateria e caixa num quadrado de 54 mm. Nada de solda.
 
-Pedido do Nei, literal: "quero fazer uma solução simples usando ESP32 e ele apenas falando comigo através de uma
-API, um robô o menor possível, quadrado, sem movimentação".
+Pedidos do Nei, literais:
+- 14/11/2026: "quero fazer uma solução simples usando ESP32 e ele apenas falando comigo através de uma API, um robô
+  o menor possível, quadrado, sem movimentação".
+- 15/11/2026: "quero duas opções, uma solução falar direto com uma api, e a outra falar com um servidor. quero tela,
+  mic e voz, uma opção a mais seria reconhecer imagem e vídeo".
+- 15/11/2026: "foca na lite e segue, então já muda o nome do projeto para focar nesta aqui".
 
 ## 2. O que o robô faz e o que não faz
 
 | Faz | Não faz |
 |---|---|
-| Grava a sua fala enquanto o botão está apertado (até 15 s) | Não anda, não gira, não inclina: sem motor, sem servo, sem rodas |
-| Manda a gravação por Wi-Fi para o servidor local | Não entende a fala sozinho: sem servidor ligado, ele não responde |
-| Toca a resposta em voz pelo falante | Não escuta o tempo todo (fase 1): só com o botão apertado |
-| Mostra o estado por um LED (pronto, gravando, pensando, falando, erro) | Não tem câmera, não tem tela (tela pequena fica como opcional) |
-| Liga pelo cabo USB-C | Não usa bateria na fase 1 |
-| | Não chama nenhuma API de nuvem |
+| Grava a sua fala enquanto você segura o dedo na tela (até 15 s) | Não anda, não gira: sem motor |
+| Manda a gravação para o "cérebro": servidor local (opção B) ou API na nuvem (opção A) | Não entende a fala sozinho: sem servidor ou API, fica mudo |
+| Toca a resposta em voz e mostra o texto na tela | Não escuta e fala ao mesmo tempo: microfone e falante dividem o mesmo barramento (seção 6) |
+| Mostra um rosto com o estado: ouvindo, pensando, falando, erro | Não escuta o tempo todo na primeira versão: só com o dedo na tela |
+| Tira uma foto quando você pede e manda junto com a pergunta | Não manda vídeo de verdade: no máximo uns poucos quadros por segundo, em 640 × 480 |
+| Funciona no cabo USB-C; a bateria de 200 mAh segura uns minutos fora dele (não medido) | Não lê texto pequeno pela câmera (0,3 MP) |
 
-## 3. Decisões já tomadas (padrão) e o que fica com o Nei
+## 3. Decisões tomadas e o que fica com o Nei
 
 | Assunto | Escolha | Por quê |
 |---|---|---|
-| Placa | Seeed Studio XIAO ESP32S3 (sem "Sense") | 21 × 17,8 mm, 8 MB de PSRAM, carregador de bateria na placa; seção 5 |
-| Microfone | INMP441 (I²S), em módulo | Fica onde a caixa precisar, longe do falante |
-| Som | MAX98357A (I²S) + falante de 28 mm, 8 Ω | Um módulo só faz o papel de DAC e amplificador |
-| Ativação | Botão: aperta e segura para falar | Sem modelo de palavra de ativação, sem escuta contínua |
-| Energia | USB-C, sempre no cabo | O robô não sai da mesa; seção 8 |
-| Servidor | Local, na máquina do Nei | Regra: nenhuma API externa sem autorização |
-| Transcrição | Whisper local do inemavox | Já aprovado |
-| Resposta | `claude -p` pela assinatura, sem ferramentas | Regra: Claude só pela assinatura |
-| Voz | Chatterbox local do inemavox, voz `rachel` | É a voz padrão da regra global; troca em uma linha do `.env` |
-| Protocolo | HTTP POST de um WAV, resposta em WAV | Um pedido, uma resposta; dá para testar com um comando; seção 11 |
-| Firmware | Arduino (core esp32 3.3.12) pelo `arduino-cli` | Já está instalado na máquina; nada a instalar |
-| Tamanho | Cubo de 40 mm de lado (mínimo calculado: 37,0 mm) | Seção 12 |
+| Placa | M5Stack CoreS3 Lite | Única das três vistas que tem câmera, sem solda e a mais barata com câmera; seção 5 |
+| Foco | Só a CoreS3 Lite | Pedido do Nei em 15/11. A Waveshare 1,54" fica como variante futura só de voz; seção 5 |
+| Ativação | Segurar o dedo na tela para falar | A Lite não tem botão livre para o usuário (só liga/desliga e reinicia) |
+| Cérebro, opção B | Servidor local: Whisper → `claude -p` → Chatterbox | Custo zero; regra: Claude só pela assinatura; seção 9 |
+| Cérebro, opção A | Direto numa API de voz em tempo real | Pedido do Nei. **Só desenho: nada é chamado sem autorização**; seção 10 |
+| Ordem | B primeiro, A depois | B não precisa de autorização nem de placa para começar (F1) |
+| Voz da opção B | Chatterbox local, voz `rachel` | Voz padrão da regra global; troca em uma linha do `.env` |
+| Firmware | Arduino pelo `arduino-cli`, core `esp32:esp32` 3.3.12, placa `m5stack_cores3` | Já instalado; a placa CoreS3 já existe no core |
+| Energia | USB-C, no cabo | Robô de mesa |
 
 Fica com o Nei:
-1. Comprar as peças ([LISTA-DE-COMPRAS.md](LISTA-DE-COMPRAS.md)).
-2. Confirmar ou trocar a voz (`rachel`, `nei`, `nei2`, `nei3`, `nei4`, `bella`).
-3. Dizer se prefere o atalho pronto (M5Stack Atom Echo, seção 5), que dispensa solda e caixa.
-4. Autorizar, se quiser, alguma opção de nuvem da seção 10. Nenhuma está implementada.
+1. Comprar a CoreS3 Lite ([LISTA-DE-COMPRAS.md](LISTA-DE-COMPRAS.md)) e dizer o preço em reais que aparece.
+2. Confirmar a voz `rachel` ou escolher outra.
+3. Para a opção A: dizer qual API avaliar (Gemini Live, OpenAI Realtime ou as duas) e autorizar por escrito o uso
+   e a finalidade. Sem isso a opção A não sai do papel.
+4. Para a opção A: dizer se o robô precisa funcionar longe de casa (vai direto na API) ou se pode passar pelo
+   servidor (seção 10, variante A2).
 
-## 4. Arquitetura em blocos
+## 4. Arquitetura
 
 ```
-            ROBÔ (cubo de 40 mm)                              SERVIDOR LOCAL (máquina do Nei)
- ┌──────────────────────────────────────┐            ┌──────────────────────────────────────────────┐
- │ botão ─────────┐                     │            │ servidor/servidor.py  (porta 8770)           │
- │ microfone I²S ─┤                     │   Wi-Fi    │   1. recebe o WAV                            │
- │   (INMP441)    ├─ XIAO ESP32S3 ──────┼──HTTP──────┼─► 2. Whisper local (inemavox)   fala → texto │
- │ amplificador ◄─┤   8 MB PSRAM        │   POST     │   3. claude -p (assinatura)      texto → texto│
- │   (MAX98357A)  │                     │◄───WAV─────┼── 4. Chatterbox local (inemavox) texto → voz │
- │      │         │                     │            │   5. ffmpeg: WAV 16 kHz mono 16 bits         │
- │   falante 28 mm│   USB-C 5 V ◄── fonte            │                                              │
- └──────────────────────────────────────┘            └──────────────────────────────────────────────┘
+                        ┌───────────── opção B (padrão) ─────────────┐
+ CoreS3 Lite ──Wi-Fi──▶ │ servidor local, porta 8770, máquina do Nei │
+ tela + câmera          │  Whisper (inemavox) → claude -p → Chatterbox│
+ mic + falante          └────────────────────────────────────────────┘
+        │
+        └──Wi-Fi──▶ opção A: API de voz em tempo real (Gemini Live ou OpenAI Realtime)
+                    só com autorização do Nei; nenhuma chamada implementada
 ```
 
-| Bloco | Peça | Papel |
-|---|---|---|
-| Cérebro do robô | XIAO ESP32S3 | Lê o botão, grava do microfone para a PSRAM, envia, toca a resposta |
-| Ouvido | INMP441, I²S | Microfone digital. Sai áudio já em números, sem ruído de fio analógico |
-| Boca | MAX98357A, I²S + falante 28 mm | Recebe áudio digital e move o falante |
-| Ativação | Chave táctil 6 × 6 mm | Aperta e segura para falar |
-| Estado | LED da própria placa (GPIO21) na bancada; "olhos" opcionais depois | Mostra o que o robô está fazendo |
-| Energia | USB-C da própria placa | 5 V do cabo |
-| Servidor | Python na máquina do Nei | Transcreve, responde, sintetiza |
+O firmware tem uma camada de "cérebro" com as duas implementações, escolhida em `segredos.h`. Tela, microfone,
+falante e câmera ficam numa camada de hardware separada, para a Waveshare poder entrar depois trocando só ela.
 
-## 5. Placa: recomendada e alternativas
+## 5. A placa: CoreS3 Lite
 
-Recomendada: **Seeed Studio XIAO ESP32S3 (sem "Sense")**.
+Especificações lidas na matéria da CNX Software de 22/07/2025 (seção 13), não na página do fabricante:
 
-| Placa | Medidas | Memória | Áudio na placa | Bateria | Fonte |
+| Item | CoreS3 Lite |
+|---|---|
+| Processador | ESP32-S3 (ESP32-S3FN16R8), dois núcleos, 240 MHz, Wi-Fi 2,4 GHz e Bluetooth 5 |
+| Memória | 16 MB de flash, 8 MB de PSRAM |
+| Tela | 2", 320 × 240, IPS, com toque capacitivo |
+| Câmera | GC0308, 0,3 MP (640 × 480), até 30 quadros por segundo |
+| Som | Falante de 1 W com amplificador AW88298; dois microfones no conversor ES7210 |
+| Sensores | Proximidade (LTR-553), movimento de 6 eixos (BMI270), bússola (BMM150), relógio (BM8563) |
+| Energia | USB-C 5 V, bateria interna de 200 mAh, controlador AXP2101 |
+| Expansão | Uma porta Grove I²C, microSD |
+| Tamanho e peso | 54 × 54 × 16,5 mm, 54 g; traseira magnética |
+| Preço de tabela | US$ 44,90 em julho de 2025 (CNX). Em reais: não conferido |
+
+Comparação com as outras placas vistas em 15/11/2026:
+
+| Placa | Câmera | Tela | Mic + falante | Bateria | Preço de tabela |
 |---|---|---|---|---|---|
-| **XIAO ESP32S3** (recomendada) | 21 × 17,8 mm | 8 MB PSRAM + 8 MB flash | Nenhum: microfone e amplificador por fora | Chip de carga na placa | P: wiki da Seeed |
-| XIAO ESP32S3 Sense | 21 × 17,8 × 15 mm com a placa de expansão | 8 MB PSRAM + 8 MB flash + cartão SD | Microfone digital PDM (relógio GPIO42, dado GPIO41) e câmera | Chip de carga na placa | P: wiki da Seeed |
-| M5Stack Atom Echo ("Atom Voice" na documentação atual) | 24,0 × 24,0 × 16,8 mm, 9 g, já com caixa | ESP32-PICO-D4, 4 MB flash; a ficha não lista PSRAM | Microfone SPM1423 (PDM), amplificador NS4168, falante de 0,8 W, botão e LED RGB | Não tem | P: docs.m5stack.com |
-| M5Stack Atom EchoS3R | 24,0 × 24,0 × 16,8 mm (NC: medida de loja) | ESP32-S3 com 8 MB PSRAM + 8 MB flash (T) | Codec ES8311, microfone MEMS, amplificador NS4150B, falante 8 Ω 1 W (T) | Não lido | T: openelab.io e mouser.com |
-| ESP32-S3-BOX-3 | Corpo não lido. Só a tela de 2,4" tem 61 mm de diagonal | 16 MB PSRAM + 16 MB flash | 2 microfones, falante, tela de toque | Não lido | T: cnx-software.com |
-| Waveshare ESP32-S3-Zero | NC (a página só mostra a medida em imagem) | 2 MB PSRAM + 4 MB flash | Nenhum | Não tem carregador | P: wiki da Waveshare |
+| **M5Stack CoreS3 Lite** | ✅ | 2", toque | ✅ | 200 mAh | US$ 44,90 |
+| M5Stack CoreS3 (completa) | ✅ | 2", toque | ✅ | 500 mAh + base DIN | US$ 59,90 |
+| M5Stack CoreS3 SE | ❌ | 2", toque | ✅ | não tem | US$ 38,90 |
+| Waveshare ESP32-S3-(Touch-)LCD-1.54 | ❌ | 1,54", 240 × 240 | ✅ | conforme a versão | não lido |
 
-Por que a XIAO ESP32S3:
-- **PSRAM de 8 MB.** 15 s de fala a 16 kHz, 16 bits, mono ocupam 480 kB. Na PSRAM isso cabe inteiro, e o firmware
-  fica direto: grava tudo, depois envia. Sem PSRAM seria preciso enviar enquanto grava.
-- **21 × 17,8 mm.** É a menor placa da tabela com PSRAM e medida confirmada.
-- **Carregador de LiPo na placa.** A bateria, se um dia entrar, são 2 pontos de solda.
-- **A placa já está no `arduino-cli` desta máquina** (`esp32:esp32:XIAO_ESP32S3`, core 3.3.12).
+- A **base DIN** da CoreS3 completa serve para prender a placa em trilho de painel elétrico e ligar em 9–24 V.
+  O robô não precisa dela. Por isso a Lite.
+- A **Waveshare** fica como variante futura, menor e só de voz: o chip da tela (ST7789) e o do som
+  (ES8311 + NS4150B) são outros, então ela entra trocando a camada de hardware do firmware.
 
-Por que não as outras:
-- **Sense:** tira um componente (o microfone já vem), mas o microfone fica preso à posição da placa, que por sua vez
-  fica presa ao USB-C na parede de trás. Com o INMP441 separado, o furo do microfone vai para a frente, longe do
-  falante. A Sense fica como plano B se a solda do INMP441 der trabalho: o firmware muda só o modo do microfone
-  (PDM em vez de I²S padrão).
-- **Atom Echo: é o menor de todos e já vem pronto.** Um cubo de 24 mm com microfone, falante, botão e LED, sem solda.
-  Se o que importa é só o menor tamanho, é ele. Ficou como alternativa por três motivos: não tem PSRAM na ficha
-  (o envio teria de ser feito enquanto grava), o falante é de 0,8 W, e a compra no Brasil não foi conferida.
-  O Atom EchoS3R resolve a memória, mas as medidas e a disponibilidade vêm só de loja. **Decisão do Nei.**
-- **ESP32-S3-BOX-3:** a tela sozinha já é maior que o cubo inteiro.
-- **ESP32-S3-Zero:** serve e costuma ser mais barata, mas tem 2 MB de PSRAM, não tem carregador e a medida não foi lida.
+## 6. Som: microfone e falante não funcionam ao mesmo tempo
 
-Cuidados com a XIAO, lidos na wiki da Seeed:
-- A antena é externa, num conector U.FL. Sem a antena ligada o Wi-Fi fica fraco. Ela precisa de lugar na caixa.
-- Na bateria, o pino 5V não tem tensão. Isso muda a alimentação do amplificador (seção 8).
-- A placa não tem pino para ler a tensão da bateria.
+Na CoreS3, o conversor dos microfones (ES7210) e o amplificador do falante (AW88298) usam o mesmo barramento I²S.
+A documentação da M5Stack diz que os dois não podem ser usados ao mesmo tempo, e o exemplo dela desliga um
+(`M5.Mic.end()`) antes de ligar o outro (`M5.Speaker.begin()`). Exemplos da comunidade esperam de 200 a 500 ms na
+troca. Fontes na seção 13.
 
-## 6. Som: microfone, amplificador, falante
+O que isso muda:
+- A conversa é **meio a meio**: ou o robô ouve, ou fala.
+- **Interromper a fala do robô é pelo toque na tela, não pela voz.** O toque para o falante e liga o microfone.
+- Na opção A, o "pode interromper" das APIs em tempo real só vale pelo toque. A escuta contínua com interrupção
+  por voz precisaria de microfone externo (porta Grove) ou de outra placa. Não está no plano.
 
-| Peça | Medidas | Fonte | Observação |
-|---|---|---|---|
-| INMP441 (módulo redondo) | Ø 14 mm, 3,5 mm de espessura com solda | NC | Conferir de que lado da placa fica o furo do som antes de desenhar o furo da caixa |
-| MAX98357A (módulo) | 19,4 × 17,8 × 3,0 mm, 1,2 g | P: Adafruit 3006. Módulo genérico: NC | 2,7 a 5,5 V. Ganho de fábrica 9 dB. 3,2 W em 4 Ω a 5 V (com 10% de distorção) |
-| Falante 28 mm, 8 Ω, 2 W | Ø 28 mm (T), altura 10 mm (NC) | Anúncio | Com 8 Ω a potência fica abaixo dos 3,2 W: sobra para voz em mesa |
-| Falante 40 mm, 4 Ω, 3 W (opção) | Ø 40 mm (T), altura 20 mm (NC) | Anúncio | Voz mais cheia. O cubo sobe para 50 mm |
+## 7. Tela e toque
 
-- Áudio nos dois sentidos: 16 kHz, 16 bits, mono. Para voz, basta, e um falante de 28 mm não reproduz muito além disso.
-- O robô nunca grava e toca ao mesmo tempo. Enquanto fala, o microfone fica desligado. Isso evita eco sem precisar
-  de cancelamento.
+- O rosto ocupa a tela: olhos que piscam, mudam com o estado (ouvindo, pensando, falando, erro, sem Wi-Fi).
+- Embaixo, uma faixa com o texto da resposta, como legenda.
+- **Segurar o dedo na tela = falar.** Soltar = enviar. Toque rápido durante a fala do robô = parar.
+- Toque duplo = tirar foto e perguntar "o que você está vendo?" (a definir na F4).
 
-## 7. Ativação e "olhos"
+## 8. Câmera
 
-- **Fase 1: botão.** Aperta e segura: grava. Solta: envia. Um aperto durante a fala interrompe a resposta.
-- **Palavra de ativação: depois, se o Nei quiser.** O core instalado traz a biblioteca `ESP_SR` (não testada aqui).
-  Não foi verificado se existe palavra em português. Entra como decisão, não como tarefa.
-- **Olhos (opcional, fora da fase 1):** um LED RGB endereçável atrás de uma parede fina na face da frente, ou uma tela
-  OLED de 0,96" por I²C. Os pinos D4, D5 e D6 ficam reservados para isso.
-- **Cores sugeridas:** casca preta e botão amarelo, as cores da marca (`#0c0c10` e `#FACC15`).
+- A câmera vai pelo `esp_camera`, que já vem no core instalado (`espressif__esp32-camera`, conferido em 15/11/2026).
+  A biblioteca M5Unified cuida da tela, do toque, do som e da energia, **não da câmera**.
+- **Foto na hora:** quadro JPEG de 640 × 480 tirado quando você começa a falar, se a pergunta pedir visão
+  (ou sempre, a decidir na F4 medindo o tempo a mais).
+- **"Vídeo":** sequência de poucos quadros por segundo. Na opção A com Gemini Live, os quadros entram na mesma
+  conexão do áudio. Na opção B, cada pergunta leva no máximo umas poucas fotos.
+- Pinos da câmera: documentação da M5Stack para a CoreS3 (seção 13). Conferir na F4 com a placa na mão.
 
-## 8. Energia: USB-C, sempre no cabo
+## 9. Opção B: servidor local (padrão)
 
-Escolha: **USB-C direto na XIAO, fonte de 5 V e 1 A ou mais.** Sem bateria na fase 1.
+1. Você segura o dedo na tela. O robô grava para a PSRAM (16 kHz, 16 bits, mono).
+2. Se for pergunta com visão, ele manda a foto antes (`POST /v1/foto`).
+3. Você solta. O robô manda o WAV (`POST /v1/fala`).
+4. O servidor transcreve (Whisper do inemavox), pede a resposta ao `claude -p` pela assinatura e gera a voz
+   (Chatterbox do inemavox).
+5. O robô recebe o WAV, troca o barramento para o falante, toca e mostra o texto.
 
-Por quê:
-1. O robô não sai da mesa e depende do Wi-Fi e do servidor de casa. Bateria não dá liberdade nenhuma aqui.
-2. A mesma porta USB-C grava o programa. Nenhuma peça a mais.
-3. Na bateria, o pino 5V da XIAO fica sem tensão. O amplificador teria de ser alimentado pela bateria (3,7 V),
-   com menos volume. No cabo, ele recebe 5 V.
-4. A bateria soma 6,5 mm ao cubo (de 40 para 46 mm) e um item a mais de risco.
-
-Se a bateria entrar depois: LiPo 1S 3,7 V, 250 mAh, modelo 502030, com proteção, soldada nos dois contatos BAT da
-XIAO. A placa já carrega a bateria pelo USB-C. Autonomia não calculada: o consumo com Wi-Fi ligado não foi medido.
-
-## 9. Ligações (proposta, conferir na bancada na F2)
-
-Pinos da XIAO lidos na wiki da Seeed. A escolha de qual pino faz o quê é uma proposta.
-
-| Sinal | Pino da XIAO | GPIO | Vai para |
-|---|---|---|---|
-| Amplificador: relógio de bits | D0 | 1 | MAX98357A `BCLK` |
-| Amplificador: canal | D1 | 2 | MAX98357A `LRC` |
-| Amplificador: dado | D3 | 4 | MAX98357A `DIN` |
-| Amplificador: alimentação | 5V | — | MAX98357A `Vin` |
-| Microfone: relógio de bits | D8 | 7 | INMP441 `SCK` |
-| Microfone: canal | D9 | 8 | INMP441 `WS` |
-| Microfone: dado | D10 | 9 | INMP441 `SD` |
-| Microfone: alimentação | 3V3 | — | INMP441 `VDD` |
-| Microfone: seleção de canal | GND | — | INMP441 `L/R` (canal esquerdo) |
-| Botão | D7 | 44 | Chave táctil, outro lado no GND (resistor interno ligado) |
-| Terra | GND | — | `GND` do amplificador, do microfone e do botão |
-| Reservado: tela ou sensor I²C | D4, D5 | 5, 6 | — |
-| Reservado: LED dos olhos | D6 | 43 | — |
-| Livre | D2 | 3 | Evitar: segundo o datasheet da Espressif é pino de configuração na partida (não relido hoje) |
-
-- São 12 fios saindo da XIAO (3 deles no mesmo GND). Fios de 28 ou 30 AWG, cortados em 6 a 8 cm, soldados direto nas placas.
-  **Sem barra de pinos:** ela soma mais de 8 mm de altura e o cubo de 40 mm deixa de fechar.
-- Microfone e amplificador usam os dois controladores I²S do ESP32-S3, um para cada. Biblioteca: `ESP_I2S`, que
-  vem no core instalado (exemplo `Record_to_WAV`).
-- Pinos `SD` e `GAIN` do amplificador ficam soltos (ganho de fábrica). NC no módulo genérico.
-
-## 10. Fluxo de voz e servidor
-
-1. Você aperta o botão. O LED muda. O ESP32 grava do microfone para a PSRAM.
-2. Você solta. O ESP32 monta um WAV e manda por HTTP POST para o servidor.
-3. O servidor transcreve a fala (Whisper local).
-4. O servidor pede a resposta ao `claude -p`, com as últimas trocas da conversa.
-5. O servidor gera a voz (Chatterbox local) e converte para WAV 16 kHz mono 16 bits.
-6. O ESP32 recebe o WAV e toca enquanto ele chega.
-
-### Servidor padrão: local, sem API externa
-
-| Etapa | Como | Conferido em 14/11/2026 |
+| Etapa | Como | Conferido |
 |---|---|---|
-| Transcrição | inemavox, API em `http://127.0.0.1:8010`: `POST /api/jobs/transcribe/upload` (arquivo + `config_json`), acompanhar em `GET /api/jobs/{id}`, texto em `GET /api/jobs/{id}/transcript?format=txt` | A API respondeu `{"status":"ok","version":"1.15.4"}`. Rotas lidas em `~/projetos/inemavox/api/server.py`. Nenhuma transcrição foi feita |
-| Transcrição, caminho rápido | `~/projetos/inemavox/whisper_daemon.py`: o modelo fica na memória, porta 7871, `POST /transcrever {"audio": caminho, "lang": "pt"}` | Estava desligado na hora do teste. Não medido |
-| Resposta | `claude -p --model haiku --tools "" --strict-mcp-config --no-session-persistence --system-prompt "<persona>" "<fala>"`, em pasta vazia, com `ANTHROPIC_API_KEY` fora do ambiente | **Testado: respondeu em 5,0 s, pela assinatura** |
-| Voz | inemavox: `POST /api/jobs/tts/upload` com o WAV de referência da voz e `config_json` com `text` e `lang`; áudio em `GET /api/jobs/{id}/audio` | Rotas lidas. Nenhuma voz foi gerada |
-| Conversão | `ffmpeg` para WAV 16 kHz, mono, 16 bits | `ffmpeg` está instalado |
+| Transcrição | inemavox `127.0.0.1:8010`: `POST /api/jobs/transcribe/upload`; ou o Whisper residente na porta 7871 | API respondeu `ok` (v1.15.4) em 14/11; nenhuma transcrição feita |
+| Resposta | `claude -p --model haiku --tools "" --strict-mcp-config --no-session-persistence`, pasta vazia, `env -u ANTHROPIC_API_KEY` | **Respondeu em 5,0 s em 14/11** |
+| Resposta com foto | Como a imagem entra no `claude -p` sem liberar ferramentas **não foi testado**. Candidato: entrada `--input-format stream-json` com um bloco de imagem. A F1 prova; a trava "sem ferramentas" não se afrouxa sem o Nei | não testado |
+| Voz | inemavox `POST /api/jobs/tts/upload` (força o Chatterbox local) | rotas lidas; nenhuma voz gerada |
+| Conversão | `ffmpeg` para WAV 16 kHz mono 16 bits | instalado |
 
-Três travas, lidas no código e no `CLAUDE.md` do inemavox e no `claude --help`:
-- **`POST /api/jobs/tts` sem o campo `engine` usa `edge`, que é o serviço online da Microsoft.** É API externa.
-  O servidor do robô só usa `/api/jobs/tts/upload`, que força `chatterbox` (local).
-- **`chatterbox-vc` também passa pelo Edge.** Não usar.
-- **`claude -p` nunca com `--bare`.** Esse modo só aceita chave de API, e a regra é assinatura.
+Travas: a rota `/api/jobs/tts` sem `engine` e o `chatterbox-vc` usam o Edge, que é serviço online: proibidos.
+`claude -p` nunca com `--bare`. O texto que chega ao Claude é fala de qualquer pessoa perto do robô: sempre sem
+ferramentas, sem MCP, sem sessão salva. Detalhe em [servidor/README.md](servidor/README.md).
 
-Segurança do servidor:
-- Ele escuta na rede de casa. Todo pedido leva um token no cabeçalho (`X-Robo-Token`), o mesmo no firmware e no `.env`.
-- O texto que chega ao `claude -p` é fala transcrita, de qualquer pessoa perto do robô. Por isso ele roda sem
-  ferramentas (`--tools ""`), sem MCP e sem salvar sessão: só responde texto.
+## 10. Opção A: direto numa API (só desenho, nada implementado)
 
-### Opções que exigem autorização explícita do Nei (nenhuma implementada)
+**Nenhuma chamada a API externa acontece sem autorização explícita do Nei, por escrito, dizendo o serviço e a
+finalidade.** Ter chave em `.env` não é autorização. A API da Anthropic não é opção: Claude só pela assinatura.
 
-| Opção | O que trocaria | Observação |
-|---|---|---|
-| OpenAI Realtime API | Transcrição, resposta e voz num serviço só, em tempo real | Pago por uso. Pede WebSocket no firmware |
-| Groq (Whisper e modelos de texto) | Transcrição e resposta mais rápidas | As chaves ficam em `~/projetos/openpcbotv2/.env`; ter a chave não é autorização |
-| ElevenLabs | Voz com os clones do Nei | Gasta créditos. Citada no `CLAUDE.md` do inemavox |
-| Edge TTS (Microsoft), pelo inemavox | Voz sem GPU, rápida | É serviço online. Hoje é o padrão do inemavox quando falta o `engine` |
-| Serviço de palavra de ativação na nuvem | Escuta contínua | Não avaliado |
+| Candidata | O que faz | Visão | Observação |
+|---|---|---|---|
+| Gemini Live (Google) | Áudio entra e sai em tempo real por WebSocket | Recebe quadros da câmera na mesma conexão | A mais indicada para "fica olhando e me diz" |
+| OpenAI Realtime | Áudio entra e sai em tempo real por WebSocket | Recebe imagem | Pago por uso |
 
-A API da Anthropic não é opção: a regra é Claude só pela assinatura.
+Duas variantes, a escolher pelo Nei:
 
-Não avaliados, só para registro: firmware aberto `xiaozhi-esp32` e o assistente de voz do ESPHome com Home Assistant.
+| Variante | Caminho | A favor | Contra |
+|---|---|---|---|
+| A1, direto | Robô → API | Funciona em qualquer Wi-Fi, longe de casa | A chave da API fica gravada no robô; WebSocket com áudio contínuo no firmware |
+| A2, via servidor | Robô → servidor → API | A chave fica no PC; o firmware é o mesmo da opção B | Depende do PC ligado, como a B |
 
-## 11. Protocolo ESP32 ↔ servidor
+Demora esperada da opção A: perto de 1 s, contra os 8 a 20 s estimados da B. É estimativa, não medida.
 
-Escolha: **HTTP POST de um WAV, resposta em WAV.**
+## 11. Protocolo robô ↔ servidor (opção B)
 
-Por quê HTTP e não WebSocket: a conversa com botão é em turnos, um pedido e uma resposta. HTTP usa só a biblioteca
-`HTTPClient` do core, e o servidor inteiro pode ser testado sem o robô, com um comando. WebSocket só compensa com
-áudio contínuo (palavra de ativação, interromper no meio). Fica para uma versão 2, se a escuta contínua entrar.
+HTTP, um pedido e uma resposta por turno. Porta 8770 (a 8765 está ocupada nesta máquina, conferido em 14/11).
 
-**Pedido**
+**Foto (opcional, antes da fala)**
 
 ```
-POST http://<ip-do-servidor>:8770/v1/fala
-Content-Type: audio/wav
-Content-Length: <bytes>
+POST /v1/foto
+Content-Type: image/jpeg
 X-Robo-Token: <token>
-X-Robo-Id: cubo-1
+X-Robo-Id: lite-1
+
+<JPEG 640 × 480, até 200 kB>
+```
+
+Resposta `200 {"turno": "<id>"}`. O servidor guarda a foto por 60 s.
+
+**Fala**
+
+```
+POST /v1/fala
+Content-Type: audio/wav
+X-Robo-Token: <token>
+X-Robo-Id: lite-1
+X-Turno: <id da foto, se houve>
 
 <WAV PCM, 16 000 Hz, 16 bits, mono, de 0,5 a 15 s>
 ```
 
-**Resposta**
-
-| Código | Corpo | O firmware faz |
+| Código | Corpo | O robô faz |
 |---|---|---|
-| 200 | WAV PCM 16 000 Hz, 16 bits, mono, com `Content-Length` | Toca enquanto recebe |
-| 204 | Vazio: gravação curta demais (menos de 0,5 s), silenciosa (volume médio abaixo de −50 dB, medido antes do Whisper) ou sem texto | Pisca uma vez e volta a "pronto" |
-| 401 | `{"erro": "token"}` | LED de erro |
-| 413 | `{"erro": "grande"}` (mais de 1 MB) | LED de erro |
-| 415 | `{"erro": "formato"}` (não é WAV 16 kHz mono 16 bits) | LED de erro |
-| 500 ou 503 | `{"erro": "<etapa que falhou>"}` | LED de erro e volta a "pronto" sem reiniciar |
+| 200 | WAV PCM 16 kHz mono 16 bits | Toca e mostra o texto de `X-Resposta` |
+| 204 | Vazio: curto (< 0,5 s), silencioso (volume médio < −50 dB, medido antes do Whisper) ou sem texto | Rosto de "não entendi" e volta a pronto |
+| 401 | `{"erro": "token"}` | Rosto de erro |
+| 413 | `{"erro": "grande"}` (fala > 1 MB, foto > 200 kB) | Rosto de erro |
+| 415 | `{"erro": "formato"}` | Rosto de erro |
+| 500 / 503 | `{"erro": "<etapa>"}` | Rosto de erro e volta a pronto sem reiniciar |
 
-Cabeçalhos da resposta 200, para depuração (texto em UTF-8 com codificação de URL, até 500 caracteres):
-`X-Ouvido` (o que o Whisper entendeu), `X-Resposta` (o texto falado) e `X-Tempos` (`stt=1.2;llm=5.0;tts=8.0;total=14.6`, em segundos).
+Cabeçalhos da resposta 200 (UTF-8 com codificação de URL, até 500 caracteres): `X-Ouvido`, `X-Resposta` e
+`X-Tempos` (`stt=1.2;llm=5.0;tts=8.0;total=14.6`, em segundos).
 
-**Saúde:** `GET /saude` devolve `{"ok": true}`. O firmware chama uma vez ao ligar.
+**Saúde:** `GET /saude` → `{"ok": true}`. **Limites:** fala de até 15 s (480 044 bytes); o robô espera até 90 s.
 
-**Limites:** gravação de até 15 s (480 044 bytes). O firmware espera a resposta por até 90 s.
+**Estados:** `PRONTO` → (dedo na tela) `OUVINDO` → (soltou) `PENSANDO` → `FALANDO` → `PRONTO`.
+Falha: `ERRO` por 2 s e volta a `PRONTO`. Toque durante `FALANDO` → `PRONTO`.
 
-**Estados do firmware:** `PRONTO` → (botão apertado) `GRAVANDO` → (botão solto) `PENSANDO` → `FALANDO` → `PRONTO`.
-Qualquer falha leva a `ERRO` por 2 s e volta a `PRONTO`.
+## 12. Firmware
 
-**Porta:** 8770. A 8765 já está ocupada nesta máquina (conferido com `ss -ltn` em 14/11/2026).
+- `arduino-cli`, core `esp32:esp32` 3.3.12, FQBN `esp32:esp32:m5stack_cores3`.
+- A placa `m5stack_cores3` do core tem PSRAM ligada por padrão no modo QSPI (`PSRAM=enabled`, lido no `boards.txt`
+  em 15/11). **Não verificado:** se essa definição de placa vale para a Lite sem ajuste. O esqueleto mostra o
+  tamanho da PSRAM pela serial; se vier 0, testar `PSRAM=opi`.
+- Bibliotecas a instalar na F2: `M5Unified` e `M5GFX` (`arduino-cli lib install M5Unified M5GFX`). É um download
+  novo: avisar o Nei antes. A câmera usa o `esp_camera` do core; som pelo `M5.Mic` e `M5.Speaker`.
 
-## 12. Tamanho do cubo
+## 13. Fontes lidas em 15/11/2026
 
-Conta feita por `python3 cad/caixa_minima.py`, com as medidas de `cad/parametros.py`. **É uma estimativa de pré-CAD:**
-a F4 confirma com o modelo 3D e com as peças medidas.
+- CoreS3 Lite, especificações e preços de tabela (Lite, CoreS3, SE): https://www.cnx-software.com/2025/07/22/m5stack-cores3-lite-low-cost-iot-controller-features-magnetic-backplate-and-200mah-battery/
+- CoreS3, documentação oficial: https://docs.m5stack.com/en/core/CoreS3
+- CoreS3 a US$ 59,90 com câmera VGA: https://www.cnx-software.com/2023/05/05/60-m5stack-cores3-esp32-s3-iot-controller-comes-with-2-inch-display-vga-camera-multiple-sensors/
+- Microfone e falante não ao mesmo tempo (M5Stack): https://docs.m5stack.com/en/arduino/m5cores3/mic
+- Barramento I²S dividido, troca de 200–500 ms (comunidade): https://lilting.ch/en/articles/m5stack-cores3-voice-chat-spec-check
+- Anúncios da loja oficial M5Stack no AliExpress (título lido, preço não):
+  CoreS3 Lite https://pt.aliexpress.com/item/1005009527295120.html ·
+  CoreS3 completa https://pt.aliexpress.com/item/1005005495395891.html ·
+  CoreS3 SE https://pt.aliexpress.com/item/1005007059753733.html
+- Waveshare ESP32-S3-LCD-1.54 (fotos e lista de componentes do anúncio): https://pt.aliexpress.com/item/1005012716829974.html
+- Placa no core: `arduino-cli board details -b esp32:esp32:m5stack_cores3` e `boards.txt` do core 3.3.12
+- inemavox: `~/projetos/inemavox/CLAUDE.md`, `api/server.py`, `api/job_manager.py`; `claude --help`
 
-Arranjo, de baixo para cima: pés, base com a grade, falante virado para baixo, amplificador deitado, XIAO deitada com o
-USB-C na parede de trás, botão sob o topo. O microfone fica em pé, colado por dentro na parede da frente.
+## 14. O que ainda não foi verificado
 
-**Largura e profundidade (vale a maior exigência), parede de 2,0 mm:**
-
-| Exigência | Conta | mm |
-|---|---|---|
-| Falante | 28 + 2 × 0,5 de folga + 2 × 1,2 do anel | 31,4 |
-| XIAO + microfone na parede da frente | 21 + 3,5 + 3,0 de fios + 2 × 0,5 | 28,5 |
-| Placa mais larga + fios dos dois lados | 17,8 + 2 × 3,0 + 2 × 0,5 | 24,8 |
-| **Interno** | a maior | **31,4** |
-| **Externo** | 31,4 + 2 × 2,0 de parede | **35,4** |
-
-**Altura (soma da pilha):**
-
-| Camada | mm | Fonte da medida |
-|---|---|---|
-| Pés (o som sai por baixo) | 3,0 | projeto |
-| Base | 2,0 | projeto |
-| Falante de 28 mm | 10,0 | NC |
-| Vão sobre o falante | 1,5 | projeto |
-| Amplificador + fios | 3,0 + 3,0 = 6,0 | P (Adafruit) + NC |
-| XIAO + fios | 4,5 + 3,0 = 7,5 | NC + NC |
-| Botão | 5,0 | NC |
-| Topo | 2,0 | projeto |
-| **Total** | **37,0** | |
-
-| Variante | Mínimo calculado | Alvo do projeto | O que manda |
-|---|---|---|---|
-| **A, padrão: USB-C, falante de 28 mm** | **37,0 mm** | **40 mm** | altura |
-| B: com bateria 502030 | 43,5 mm | 46 mm | altura |
-| C: falante de 40 mm | 47,4 mm | 50 mm | largura |
-
-- **Resposta: cubo de 40 mm de lado.** O alvo é o mínimo mais 2,5 mm de margem, arredondado para cima, porque 4 das
-  8 camadas dependem de medida NC.
-- Com parede de 2,4 mm os alvos passam a 41, 47 e 51 mm.
-- Medidas NC que mudam o resultado: altura do falante, altura da XIAO, altura do botão, espessura do microfone,
-  espaço dos fios.
-- Fora da conta: a antena da XIAO (cola numa parede interna; tamanho NC) e o rebaixo para o plugue do cabo USB-C.
-- Se a montagem à mão não couber em 40 mm depois da peça de teste, o plano B é 45 mm, sem mudar o arranjo.
-- PLA do cubo de 40 mm: cerca de 22 g (estimativa por volume, sem fatiador).
-
-## 13. Onde fica cada abertura (cubo de 40 mm, variante A)
-
-Alturas contadas a partir da mesa, tiradas da pilha da seção 12. A posição final sai do CAD.
-
-| Abertura | Face | Posição | Como fica discreta |
-|---|---|---|---|
-| Grade do falante | De baixo | Rasgos de 1,5 mm dentro de um círculo de Ø 26 mm | Não aparece: o som sai pelo vão de 3 mm dos pés |
-| Furo do microfone | Frente | Um furo de Ø 2 mm, centrado, a cerca de 30 mm da mesa | Um ponto só, longe do falante |
-| USB-C | Trás | Centrado, a cerca de 25 mm da mesa; abertura de 9,5 × 3,8 mm (NC) com rebaixo de 12,5 × 7 mm (NC) para o plugue | Fica atrás |
-| Botão | Topo | No centro; tecla impressa de Ø 8 mm, rente ao topo | Rente, de outra cor |
-| Olhos (opcional) | Frente | Duas janelas de parede fina (0,6 mm), acima do furo do microfone | Sem furo: a luz atravessa o plástico |
-
-Peças impressas previstas: `casca` (4 lados + topo, impressa com o topo na mesa, sem suporte), `base` (com grade,
-pés e anel do falante), `berco` (segura a XIAO e o amplificador) e `tecla`. Fecho: 4 parafusos M2 × 8 por baixo (NC)
-ou encaixe, a decidir na F4.
-
-## 14. Fontes lidas em 14/11/2026
-
-- XIAO ESP32S3 (medidas, memória, pinos, bateria, microfone da Sense): https://wiki.seeedstudio.com/xiao_esp32s3_getting_started/
-- Atom Echo / Atom Voice (medidas, chip, microfone, amplificador): https://docs.m5stack.com/en/atom/atomecho
-- MAX98357A (medidas do módulo, potência, tensão, ganho): https://www.adafruit.com/product/3006
-- Atom EchoS3R (loja, não oficial): https://openelab.io/products/m5stack-atom-echos3r-smart-speaker e https://www.mouser.com/new/m5stack/m5stack-atoms3r-kits/
-- ESP32-S3-BOX-3 (tela, memória, microfones): https://www.cnx-software.com/2023/09/01/esp32-s3-box-3-devkit-comes-with-2-4-inch-display-dual-microphone-pcie-expansion-connector/
-- ESP32-S3-Zero (memória, 2 controladores I²S): https://www.waveshare.com/wiki/ESP32-S3-Zero
-- Rotas e padrões do inemavox: `~/projetos/inemavox/CLAUDE.md`, `api/server.py`, `api/job_manager.py`, `whisper_daemon.py`
-- Opções do `claude -p`: `claude --help` desta máquina
-- Placas e bibliotecas instaladas: `arduino-cli core list` e `arduino-cli board details -b esp32:esp32:XIAO_ESP32S3`
-
-Não consegui ler: a ficha do INMP441 (a página devolveu só a capa) e preços em loja (a busca da loja depende de
-JavaScript; limite já registrado em `~/projetos/wifi/LIMITES.md` em 14/11/2026).
-
-## 15. O que ainda não foi verificado
-
-- Nenhuma peça foi comprada nem medida. Toda medida NC é valor usual de mercado.
-- Nenhuma transcrição nem voz foi gerada para este projeto. O tempo total de uma resposta não é conhecido.
-  Só o `claude -p` foi medido: 5,0 s, uma vez.
-- A pinagem da seção 9 é proposta. O único código compilado é o esqueleto que pisca o LED.
-- O cubo de 40 mm é conta de empilhamento, sem modelo 3D.
-- Compra no Brasil da XIAO ESP32S3 e do Atom Echo: não conferida.
+- Nada foi comprado. O preço em reais não foi lido (o AliExpress só mostra no navegador).
+- As especificações da Lite vêm da CNX Software, não da página oficial.
+- A definição de placa `m5stack_cores3` na Lite e o modo da PSRAM.
+- Nenhuma transcrição nem voz foi gerada para o projeto. Só o `claude -p` foi medido: 5,0 s, uma vez.
+- Como mandar uma foto ao `claude -p` sem liberar ferramentas.
+- A troca do barramento entre microfone e falante na prática (tempo e estalo).
+- A opção A inteira: nenhuma API foi chamada.

@@ -1,36 +1,32 @@
-# robo-esp32-fala
+# robo-cores3-lite
 
-Um cubo de mesa de 40 mm com um ESP32 dentro. Você aperta o botão, fala, e ele responde com voz.
-Não anda, não gira, não tem motor. Quem entende a fala, escreve a resposta e gera a voz é um servidor local na sua
-máquina, sem API externa.
+Um robô de mesa quadrado, sem movimento, feito com a **M5Stack CoreS3 Lite**: ele ouve, responde com voz, mostra um
+rosto e o texto na tela, e enxerga pela câmera. A placa já vem pronta, sem solda.
 
-**Estado em 14/11/2026: só a definição.** Nada foi comprado, soldado nem impresso. O servidor ainda não foi escrito.
-O firmware é um esqueleto que pisca o LED.
+Duas opções de "cérebro":
+- **Opção B (padrão): servidor local** nesta máquina. Whisper → `claude -p` pela assinatura → Chatterbox. Custo zero.
+- **Opção A: direto numa API** de voz em tempo real (Gemini Live ou OpenAI Realtime). Só desenho: nada é chamado sem
+  autorização do Nei.
+
+**Estado em 15/11/2026: definição pronta, placa não comprada.** O servidor ainda não foi escrito. O firmware é um
+esqueleto que compila e mostra a PSRAM.
 
 | Para | Onde |
 |---|---|
 | Entender o que é e o que foi decidido | [DEFINICAO.md](DEFINICAO.md) |
 | Comprar | [LISTA-DE-COMPRAS.md](LISTA-DE-COMPRAS.md) |
-| Ver as fases e o critério de pronto de cada uma | [PLANO.md](PLANO.md) |
-| Servidor local (transcrição, resposta, voz) | [servidor/README.md](servidor/README.md) |
-| Programa do ESP32 | [firmware/README.md](firmware/README.md) |
-| Caixa impressa | [cad/README.md](cad/README.md) |
+| Fases e critério de pronto de cada uma | [PLANO.md](PLANO.md) |
+| Servidor local (opção B) | [servidor/README.md](servidor/README.md) |
+| Programa da placa | [firmware/README.md](firmware/README.md) |
+| Versão anterior (XIAO soldada num cubo de 40 mm) | [arquivo/variante-xiao/](arquivo/variante-xiao/DEFINICAO.md) |
 | Retomar o trabalho | [handoffs/latest.md](handoffs/latest.md) |
 
 ## Em números
 
-- Cubo: 40 mm de lado (mínimo calculado: 37,0 mm). Com bateria: 46 mm. Com falante de 40 mm: 50 mm.
-- Placa: Seeed Studio XIAO ESP32S3, 21 × 17,8 mm, 8 MB de PSRAM.
-- Peças da fase 1: R$ 158–370 (estimativa, não conferida em loja).
+- Placa: 54 × 54 × 16,5 mm, 54 g. Tela de 2", 320 × 240, com toque. Câmera de 0,3 MP. Bateria de 200 mAh.
+- Preço de tabela: US$ 44,90 (jul/2025). Em reais: estimativa, não conferida.
 - Áudio: 16 kHz, 16 bits, mono, nos dois sentidos. Fala de até 15 s.
-- Impressora: Bambu Lab A1. Cerca de 22 g de PLA (estimativa por volume).
-
-## Como funciona
-
-1. Você segura o botão e fala. O ESP32 grava.
-2. Você solta. O ESP32 manda o WAV por Wi-Fi para o servidor (`POST /v1/fala`).
-3. O servidor transcreve com o Whisper local, pede a resposta ao `claude -p` e gera a voz com o Chatterbox local.
-4. O ESP32 toca a resposta.
+- `claude -p` respondeu em 5,0 s (uma medida, 14/11). O tempo total da opção B ainda não foi medido.
 
 ## O processo, do início ao fim
 
@@ -38,34 +34,25 @@ Legenda: 🧠 sessão com o Nei · ⚙️ comando/script · 🤖 `claude -p`
 
 | # | Passo | Comando | Quem | Existe hoje? |
 |---|---|---|---|---|
-| 1 | Ler a definição e confirmar placa, voz e tamanho | [DEFINICAO.md](DEFINICAO.md), seção 3 | 🧠 | sim |
-| 2 | Comprar as peças | [LISTA-DE-COMPRAS.md](LISTA-DE-COMPRAS.md) | 🧠 | sim |
-| 3 | Medir as peças marcadas NC e corrigir as medidas | editar `cad/parametros.py` | 🧠 | sim |
-| 4 | Recalcular o tamanho do cubo | `python3 cad/caixa_minima.py` | ⚙️ | sim |
-| 5 | Copiar o `.env` do servidor e escolher o token | `cp servidor/env.exemplo servidor/.env` | 🧠 | sim |
-| 6 | Subir o servidor do robô | `python3 servidor/servidor.py` | ⚙️ | não: fase F1 |
-| 7 | Testar o servidor com um WAV, sem o robô | `python3 servidor/testar.py servidor/teste/pergunta.wav` | ⚙️ | não: fase F1 |
-| 8 | Dentro de cada turno: escrever a resposta | `claude -p --model haiku --tools "" --strict-mcp-config --no-session-persistence …` | 🤖 | comando testado |
-| 9 | Soldar microfone, botão, amplificador e falante na placa | [DEFINICAO.md](DEFINICAO.md), seção 9 | 🧠 | — |
-| 10 | Preencher Wi-Fi, endereço do servidor e token | `cp firmware/robo_fala/segredos.exemplo.h firmware/robo_fala/segredos.h` | 🧠 | sim |
-| 11 | Compilar o firmware | `arduino-cli compile --fqbn esp32:esp32:XIAO_ESP32S3:PSRAM=opi firmware/robo_fala` | ⚙️ | sim (esqueleto) |
-| 12 | Gravar na placa | `arduino-cli upload --fqbn esp32:esp32:XIAO_ESP32S3:PSRAM=opi -p /dev/ttyACM0 firmware/robo_fala` | ⚙️ | não testado: sem placa |
-| 13 | Conversar na bancada: 5 perguntas seguidas | [PLANO.md](PLANO.md), fases F2 e F3 | 🧠 | — |
-| 14 | Gerar e verificar a caixa (11 testes) | pipeline do `robos-impressos`, receita em [cad/README.md](cad/README.md) | ⚙️ | não: fase F4 |
-| 15 | Imprimir a peça de teste e depois a caixa | 3MF no fatiador da Bambu Lab A1 | 🧠 | — |
-| 16 | Montar, fechar e repetir as 5 perguntas | [PLANO.md](PLANO.md), fase F4 | 🧠 | — |
-| 17 | Guia e publicação | só com a ordem do Nei: [PLANO.md](PLANO.md), fase F5 | 🧠 | — |
+| 1 | Ler a definição e escolher voz e opção | [DEFINICAO.md](DEFINICAO.md), seção 3 | 🧠 | sim |
+| 2 | Comprar a CoreS3 Lite | [LISTA-DE-COMPRAS.md](LISTA-DE-COMPRAS.md) | 🧠 | sim |
+| 3 | Copiar o `.env` do servidor e escolher o token | `cp servidor/env.exemplo servidor/.env` | 🧠 | sim |
+| 4 | Subir o servidor (opção B) | `python3 servidor/servidor.py` | ⚙️ | não: fase F1 |
+| 5 | Testar o servidor sem o robô, com e sem foto | `python3 servidor/testar.py servidor/teste/pergunta.wav` | ⚙️ | não: fase F1 |
+| 6 | Dentro de cada turno: escrever a resposta | `claude -p --model haiku --tools "" --strict-mcp-config --no-session-persistence …` | 🤖 | comando testado |
+| 7 | Instalar as bibliotecas da placa (avisar o Nei) | `arduino-cli lib install M5Unified M5GFX` | ⚙️ | não: fase F2 |
+| 8 | Preencher Wi-Fi, servidor, token e cérebro | `cp firmware/robo_fala/segredos.exemplo.h firmware/robo_fala/segredos.h` | 🧠 | sim |
+| 9 | Compilar o firmware | `arduino-cli compile --fqbn esp32:esp32:m5stack_cores3 firmware/robo_fala` | ⚙️ | sim (esqueleto) |
+| 10 | Gravar na placa | `arduino-cli upload --fqbn esp32:esp32:m5stack_cores3 -p /dev/ttyACM0 firmware/robo_fala` | ⚙️ | não testado: sem placa |
+| 11 | Conversar na bancada: 5 perguntas seguidas | [PLANO.md](PLANO.md), fase F2 | 🧠 | — |
+| 12 | Opção A, direto na API | só com autorização do Nei: [PLANO.md](PLANO.md), fase F3 | 🧠 | — |
+| 13 | Visão: foto e poucos quadros | [PLANO.md](PLANO.md), fase F4 | 🧠 | — |
+| 14 | Guia e publicação | só com a ordem do Nei: [PLANO.md](PLANO.md), fase F5 | 🧠 | — |
 
-O único passo com `claude -p` é o 8, e ele roda pela assinatura, sem ferramentas.
+O único passo com `claude -p` é o 6, pela assinatura, sem ferramentas.
 
 ## Regras
 
-- Nenhuma API externa sem autorização explícita do Nei. As opções de nuvem estão listadas na DEFINICAO.md, seção 10,
-  e nenhuma está implementada.
+- Nenhuma API externa sem autorização explícita do Nei (serviço e finalidade). A opção A existe só no papel.
 - Claude só pela assinatura (`claude -p`), nunca por chave de API.
 - Repo local por enquanto: sem remoto e sem push até o Nei mandar.
-
-## Parente próximo
-
-O pipeline de CAD e o estilo dos documentos vêm do [robos-impressos](https://github.com/inematds/robos-impressos),
-o projeto dos robôs de 30 cm. Este aqui é separado e não depende daquele para rodar.
