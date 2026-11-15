@@ -119,6 +119,11 @@
   .techzone{background:var(--bg2)}
   footer{padding:46px 0;text-align:center;color:var(--mut);font-size:.9rem}
   .pill{display:inline-block;border:1px solid var(--line);border-radius:999px;padding:.3em .8em;font-size:.78rem;color:var(--mut);margin:4px}
+  .poderes{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:18px 0 6px}
+  .poderes div{border:1px solid var(--amb);border-radius:12px;padding:10px 12px;background:rgba(250,204,21,.07)}
+  .poderes b{display:block;font-family:Sora;font-size:1.15rem;color:var(--amb);letter-spacing:-.01em}
+  .poderes span{font-size:.82rem;color:var(--mut);line-height:1.35}
+  @media (max-width:640px){.poderes{grid-template-columns:repeat(2,1fr)}}
 </style>
 </head>
 <body>
@@ -149,6 +154,12 @@
     <div>
       <span class="chip">Robô de mesa · servidor em casa</span>
       <h1>Um robô na sua mesa que <span class="amb">conversa</span> com você, sem pagar API por pergunta</h1>
+      <div class="poderes" aria-label="Ele faz quatro coisas">
+        <div><b>Ouve</b><span>dois microfones: segure o dedo na tela e fale</span></div>
+        <div><b>Fala</b><span>responde com voz, por partes, sem silêncio longo</span></div>
+        <div><b>Vê</b><span>câmera: pergunte “o que você está vendo?”</span></div>
+        <div><b>Mostra</b><span>rosto e legenda na tela de toque de 2"</span></div>
+      </div>
       <p class="lead">Você quer conversar com uma máquina sem pagar API por pergunta e sem que a gravação da sua voz saia de casa. O <strong>Robô CoreS3 Lite</strong> usa uma placa pronta de R$ 256 para ouvir e falar; um servidor no seu PC transcreve e gera a voz ali mesmo e pede a resposta ao Claude pela sua assinatura (a mensal, que você já paga). Hoje o servidor está pronto e medido; a placa ainda não chegou.</p>
       <div class="cta">
         <a class="btn" href="#ideia">Entender em 5 minutos</a>

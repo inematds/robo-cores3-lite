@@ -119,6 +119,11 @@
   .techzone{background:var(--bg2)}
   footer{padding:46px 0;text-align:center;color:var(--mut);font-size:.9rem}
   .pill{display:inline-block;border:1px solid var(--line);border-radius:999px;padding:.3em .8em;font-size:.78rem;color:var(--mut);margin:4px}
+  .poderes{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:18px 0 6px}
+  .poderes div{border:1px solid var(--amb);border-radius:12px;padding:10px 12px;background:rgba(250,204,21,.07)}
+  .poderes b{display:block;font-family:Sora;font-size:1.15rem;color:var(--amb);letter-spacing:-.01em}
+  .poderes span{font-size:.82rem;color:var(--mut);line-height:1.35}
+  @media (max-width:640px){.poderes{grid-template-columns:repeat(2,1fr)}}
 </style>
 </head>
 <body>
@@ -149,6 +154,12 @@
     <div>
       <span class="chip">Desktop robot · home server</span>
       <h1>A robot on your desk that <span class="amb">talks</span> with you, with no per-question API fees</h1>
+      <div class="poderes" aria-label="It does four things">
+        <div><b>Hears</b><span>two microphones: hold a finger on the screen and talk</span></div>
+        <div><b>Speaks</b><span>answers out loud, in parts, with no long silence</span></div>
+        <div><b>Sees</b><span>camera: ask “what are you seeing?”</span></div>
+        <div><b>Shows</b><span>a face and captions on the 2" touchscreen</span></div>
+      </div>
       <p class="lead">You want to talk to a machine without paying an API fee for every question and without your voice recording leaving home. The <strong>M5Stack CoreS3 Lite Robot</strong> uses a ready-to-use R$ 256 (Brazilian reais; list price US$ 44.90) board to listen and speak; a server on your PC transcribes your speech and generates the voice right there, then asks Claude for a reply through your subscription (the monthly plan you already pay for). The server is ready and measured; the board has not arrived yet.</p>
       <div class="cta">
         <a class="btn" href="#ideia">Understand it in 5 minutes</a>
