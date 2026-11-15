@@ -27,6 +27,10 @@ Pronto quando:
 
 ## F1 — Servidor local responde a um WAV de teste
 
+**Pronta em 15/11/2026:** os 10 critérios passaram (tempos em `servidor/MEDIDAS.md`). Mudança de caminho: a
+transcrição e a voz pela fila de jobs do inemavox levavam 12 s e 14–28 s; o servidor usa o Whisper residente do
+inemavox e a voz residente `servidor/voz_residente.py`, que sobem sob demanda e saem depois de 10 min parados.
+
 O que fazer: escrever `servidor/servidor.py` (só biblioteca padrão do Python) e `servidor/testar.py`, conforme
 [servidor/README.md](servidor/README.md). Criar `servidor/teste/pergunta.wav` sem depender de ninguém: gerar
 "que horas são em Tóquio?" pela rota `/api/jobs/tts/upload` do inemavox (voz `rachel`) e converter com

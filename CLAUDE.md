@@ -17,7 +17,10 @@ Pedidos do Nei, literais, na DEFINICAO.md, seção 1. Em 15/11/2026: "foca na li
 ## Comandos
 - Compilar: `arduino-cli compile --fqbn esp32:esp32:m5stack_cores3 firmware/robo_fala`.
 - Gravar: `arduino-cli upload --fqbn esp32:esp32:m5stack_cores3 -p <porta> firmware/robo_fala`.
-- Servidor (a partir da F1): `python3 servidor/servidor.py` e `python3 servidor/testar.py servidor/teste/pergunta.wav`.
+- Servidor: `python3 servidor/servidor.py`; validar com `python3 servidor/testar.py --limites` e
+  `python3 servidor/testar.py servidor/teste/pergunta.wav` (com `--foto servidor/teste/foto.jpg` para visão).
+- Serviços residentes: Whisper do inemavox (7871) e `servidor/voz_residente.py` (7872), sobem sob demanda e saem
+  sozinhos em 10 min. Parar à mão: `pgrep -af "voz_residente|whisper_daemon"` e `kill <pid>` (nunca `pkill -f`).
 - Saúde do inemavox: `GET http://127.0.0.1:8010/api/health`.
 
 ## Regras do projeto

@@ -1,7 +1,8 @@
 # servidor — a parte que entende, pensa e fala
 
-**Ainda não existe código aqui.** Este arquivo diz o que vai ter e dá a receita da fase F1 do
-[PLANO.md](../PLANO.md). O protocolo completo está na [DEFINICAO.md](../DEFINICAO.md), seção 11. Este servidor é a **opção B** do robô
+**F1 pronta em 15/11/2026:** os 10 critérios da fase F1 do [PLANO.md](../PLANO.md) passaram. Tempos em
+[MEDIDAS.md](MEDIDAS.md): 10 a 14 s por resposta com os serviços residentes no ar, 33 s na primeira pergunta
+depois de 10 min parado. O protocolo completo está na [DEFINICAO.md](../DEFINICAO.md), seção 11. Este servidor é a **opção B** do robô
 (a opção A, direto numa API, está na seção 10 e não passa por aqui, a não ser na variante A2).
 
 O servidor roda na máquina do Nei e não chama nenhum serviço de fora: fala só com `127.0.0.1`.
@@ -10,6 +11,8 @@ O servidor roda na máquina do Nei e não chama nenhum serviço de fora: fala s�
 
 | Arquivo | O que é |
 |---|---|
+| `voz_residente.py` | Chatterbox carregado uma vez (porta 7872), sai sozinho depois de 10 min parado. O servidor sobe sob demanda |
+| `inemavox.py` | Cliente do inemavox (fila de jobs): caminho lento de reserva para a transcrição |
 | `servidor.py` | Servidor HTTP na porta 8770. Só biblioteca padrão do Python (`http.server`, `urllib`, `subprocess`): nada a instalar |
 | `testar.py` | Manda um WAV ao servidor e confere a resposta (formato, volume, texto, tempos). É o validador da F1 |
 | `persona.txt` | Quem o robô é e como responde. Vira o `--system-prompt` do `claude -p` |
@@ -29,6 +32,22 @@ O servidor roda na máquina do Nei e não chama nenhum serviço de fora: fala s�
 | `POST /v1/fala` | Recebe um WAV 16 kHz mono 16 bits (com `X-Turno` se houve foto), devolve um WAV no mesmo formato com a resposta falada |
 
 Códigos de resposta, cabeçalhos e limites: DEFINICAO.md, seção 11.
+
+## Como subir
+
+```
+cp servidor/env.exemplo servidor/.env   # e trocar o ROBO_TOKEN (16+ caracteres)
+python3 servidor/servidor.py            # porta 8770; sobe o Whisper e a voz residentes na primeira pergunta
+python3 servidor/testar.py --limites
+python3 servidor/testar.py servidor/teste/pergunta.wav
+python3 servidor/testar.py --foto servidor/teste/foto.jpg servidor/teste/pergunta-visao.wav
+```
+
+**Memória:** enquanto houver conversa, o Whisper large-v3 e o Chatterbox ficam carregados na GPU. Os dois saem
+sozinhos depois de 10 min sem pedido. Eles não passam pela fila `fila-vaga gpu`.
+
+**Foto no Claude, sem ferramentas (provado em 15/11/2026):** `--input-format stream-json --output-format stream-json
+--verbose` com uma mensagem que leva um bloco de imagem em base64. O `--tools ""` continua.
 
 ## Receita de um turno (o que o `servidor.py` faz)
 

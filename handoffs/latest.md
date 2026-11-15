@@ -43,13 +43,14 @@ meio, interromper só pelo toque. `esp_camera` vem no core instalado. M5Unified 
 2. Confirmar a voz `rachel` ou escolher outra.
 3. Opção A: qual API (Gemini Live, OpenAI Realtime) e variante A1 (direto) ou A2 (via servidor); autorização escrita.
 
+## F1 pronta (15/11/2026)
+- `servidor/servidor.py`, `servidor/testar.py`, `servidor/voz_residente.py`, `servidor/inemavox.py`, `servidor/persona.txt`.
+- 10 critérios passaram; tempos em `servidor/MEDIDAS.md`: 10–14 s quente, 33 s frio, 15,9 s com foto.
+- Foto no `claude -p` sem ferramentas: provado (stream-json com bloco de imagem).
+- Whisper e voz residentes ficam na GPU enquanto há conversa e saem em 10 min; não passam pela `fila-vaga gpu`.
+  Levar ao Nei se isso conflitar com a regra das vagas.
+- `~/projetos/inemavox/jobs/` tem 16 GB (não mexer; o servidor do robô não cria jobs lá no caminho normal).
+
 ## Próxima ação exata
-**Fase F1 do `PLANO.md`: escrever o servidor local. Não precisa da placa.**
-1. `cp servidor/env.exemplo servidor/.env` e trocar o `ROBO_TOKEN`.
-2. Gerar `servidor/teste/pergunta.wav` ("que horas são em Tóquio?") pela rota `/api/jobs/tts/upload` do inemavox,
-   voz `rachel`, e converter com `ffmpeg -ar 16000 -ac 1 -c:a pcm_s16le`. Idem `pergunta-visao.wav`
-   ("o que você está vendo?") e uma `foto.jpg` 640 × 480.
-3. Testar à parte como a foto entra no `claude -p` sem ferramentas, antes de escrever o servidor.
-4. Escrever `servidor/servidor.py` (só biblioteca padrão) e `servidor/testar.py` com os 10 critérios da F1.
-5. Rodar até três `PASSOU` seguidos; tempos em `servidor/MEDIDAS.md`. Commit.
-6. Se o total passar de 20 s, parar e levar os números ao Nei antes da F2.
+**F2 assim que a CoreS3 Lite chegar** (PLANO.md): avisar o Nei e instalar `M5Unified` e `M5GFX`; firmware com rosto,
+segurar para falar, enviar, tocar, legenda. Até lá: o Nei pode ouvir `servidor/teste/resposta.wav` e julgar a voz.
