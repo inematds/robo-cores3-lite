@@ -6,7 +6,7 @@ tópico do Telegram).
 
 portal: feito
 telegram: feito 2986
-lives6: pendente (outro agente)
+lives6: feito https://www.youtube.com/watch?v=ckhcNbClXNs
 
 ## Guia (GitHub Pages, via Actions, branch main)
 
@@ -45,3 +45,13 @@ lives6: pendente (outro agente)
   `~/projetos/output/posts-telegram/capas/robo-cores3-lite.jpg`.
 - Para responder no mesmo tópico: `postar_topico.py --grupo INEMA.ROBOT --topico 2986 ...` (skill `postar-telegram`).
 - Nada no Telegram pode ser apagado sem aprovação individual do Nei.
+
+## Vídeo (lives6)
+
+- YouTube (INEMA Robot, lives6, público, Short): https://www.youtube.com/watch?v=ckhcNbClXNs
+- Título: "Essa placa de R$ 256 vira um robô que conversa (e não paga API) #shorts"
+- Reel r7ex, 58,6 s, 9:16. MP4: `~/projetos/r7ex/edicoes/2026-11-15-robo-cores3-lite/video.mp4`
+  (folha `build/folha.jpg`; revisor independente: aprovado, impacto 7, só sugestões).
+- Publicado direto com o yt-pubx em 15/11/2026 02:49 (exceção de 05/11: a entrega precisava do link); não entrou na fila.
+- v3: msg 4779. Telegram: resposta no tópico 2986, msgs 3023–3024 — https://t.me/c/2412734678/3024
+- Guia: seção `#video` (embed vertical) nos 3 idiomas; linha "🎬 Vídeo" nos 3 READMEs.

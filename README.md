@@ -4,6 +4,8 @@
 
 **🇧🇷 [Português](README.md) · 🇺🇸 [English](README.en.md) · 🇪🇸 [Español](README.es.md)**
 
+🎬 Vídeo: https://www.youtube.com/watch?v=ckhcNbClXNs
+
 ## O que é
 
 Este é um projeto aberto para montar um robô de mesa que conversa por voz: você segura o dedo na tela, fala, e ele
@@ -75,7 +77,7 @@ Legenda: 🧠 sessão com o Nei · ⚙️ comando/script · 🤖 `claude -p`
 | 15 | Publicar: push no `main`; o GitHub Pages sai pelo Actions | `git push` → https://inematds.github.io/robo-cores3-lite/guia/ | ⚙️ | sim |
 | 16 | Portal inema.club, inemabuscas e catálogo PRO | skill `atualiza-portal` | 🧠 | sim — [PUBLICACAO.md](PUBLICACAO.md) |
 | 17 | Tópico no grupo INEMA.ROBOT do Telegram + MENU | skill `postar-telegram` | 🧠 | sim — [PUBLICACAO.md](PUBLICACAO.md) |
-| 18 | Vídeo no canal lives6 e no guia | outro agente; marca `<!-- VIDEO: -->` no guia | 🧠 | não: em andamento |
+| 18 | Vídeo no canal lives6 e no guia | outro agente; marca `<!-- VIDEO: -->` no guia | 🧠 | sim (15/11/2026) — [lives6](https://www.youtube.com/watch?v=ckhcNbClXNs) |
 
 No robô, o único passo com `claude -p` é o 6, pela assinatura, sem ferramentas. O 🤖 do passo 14 é a tradução e o revisor.
 

@@ -4,6 +4,8 @@
 
 **🇧🇷 [Português](README.md) · 🇺🇸 [English](README.en.md) · 🇪🇸 [Español](README.es.md)**
 
+🎬 Video: https://www.youtube.com/watch?v=ckhcNbClXNs
+
 ## Qué es
 
 Este es un proyecto abierto para armar un robot de escritorio que conversa por voz: mantienes el dedo en la pantalla, hablas y él responde en voz alta, muestra el texto en la pantalla y puede mirar por la cámara. El cuerpo es una placa lista para usar, la M5Stack CoreS3 Lite (un cuadrado de 5 cm con pantalla, cámara, micrófonos y altavoz, sin soldaduras). El «cerebro» pasa por tu computadora: transcribe y genera la voz allí mismo y le pide la respuesta a Claude con tu suscripción, sin pagar por pregunta. El servidor ya está listo y medido; la placa aún no llegó, así que el robot completo todavía no se ha probado.
@@ -65,7 +67,7 @@ Leyenda: 🧠 sesión con Nei · ⚙️ comando/script · 🤖 `claude -p`
 | 15 | Publicar: push a `main`; GitHub Pages se publica mediante Actions | `git push` → https://inematds.github.io/robo-cores3-lite/guia/ | ⚙️ | sí |
 | 16 | Portal inema.club, inemabuscas y catálogo PRO | skill `atualiza-portal` | 🧠 | sí — [PUBLICACAO.md](PUBLICACAO.md) (en portugués) |
 | 17 | Tema en el grupo INEMA.ROBOT de Telegram + MENU | skill `postar-telegram` | 🧠 | sí — [PUBLICACAO.md](PUBLICACAO.md) (en portugués) |
-| 18 | Video en el canal lives6 y en la guía | otro agente; marca `<!-- VIDEO: -->` en la guía | 🧠 | no: en curso |
+| 18 | Video en el canal lives6 y en la guía | otro agente; marca `<!-- VIDEO: -->` en la guía | 🧠 | sí (15/11/2026) — [lives6](https://www.youtube.com/watch?v=ckhcNbClXNs) |
 
 En el robot, el único paso con `claude -p` es el 6, con la suscripción y sin herramientas. El 🤖 del paso 14 corresponde a la traducción y al revisor.
 

@@ -4,6 +4,8 @@
 
 **🇧🇷 [Português](README.md) · 🇺🇸 [English](README.en.md) · 🇪🇸 [Español](README.es.md)**
 
+🎬 Video: https://www.youtube.com/watch?v=ckhcNbClXNs
+
 ## What it is
 
 This is an open project for building a tabletop robot that talks by voice: you hold your finger on the screen, speak, and it replies aloud, with the text on screen. It can also look through its camera. Its body is a ready-made board, the M5Stack CoreS3 Lite (a 5 cm square with a screen, camera, microphones, and speaker, with no soldering). Its “brain” runs through your computer: it transcribes speech and generates the voice right there, then asks Claude for an answer through your subscription, with no charge per question. The server is ready and its performance has been measured; the board has not arrived yet, so the complete robot has not been tested.
@@ -64,7 +66,7 @@ Legend: 🧠 session with Nei · ⚙️ command/script · 🤖 `claude -p`
 | 15 | Publish: push to `main`; GitHub Pages is published through Actions | `git push` → https://inematds.github.io/robo-cores3-lite/guia/ | ⚙️ | yes |
 | 16 | inema.club portal, inemabuscas, and PRO catalog | skill `atualiza-portal` | 🧠 | yes — [PUBLICACAO.md](PUBLICACAO.md) (in Portuguese) |
 | 17 | Topic in the INEMA.ROBOT Telegram group + MENU | skill `postar-telegram` | 🧠 | yes — [PUBLICACAO.md](PUBLICACAO.md) (in Portuguese) |
-| 18 | Video on the lives6 channel and in the guide | another agent; `<!-- VIDEO: -->` marker in the guide | 🧠 | no: in progress |
+| 18 | Video on the lives6 channel and in the guide | another agent; `<!-- VIDEO: -->` marker in the guide | 🧠 | yes (15/11/2026) — [lives6](https://www.youtube.com/watch?v=ckhcNbClXNs) |
 
 In the robot, the only step that uses `claude -p` is step 6, through the subscription, with no tools. The 🤖 in step 14 is the translation and reviewer.
 
