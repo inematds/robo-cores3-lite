@@ -124,6 +124,12 @@
   .poderes b{display:block;font-family:Sora;font-size:1.15rem;color:var(--amb);letter-spacing:-.01em}
   .poderes span{font-size:.82rem;color:var(--mut);line-height:1.35}
   @media (max-width:640px){.poderes{grid-template-columns:repeat(2,1fr)}}
+  .corpos .corpo{padding:0;overflow:hidden}
+  .corpos .corpo img{width:100%;aspect-ratio:3/2;object-fit:cover;display:block;border-bottom:1px solid var(--line)}
+  .corpos .corpo h3,.corpos .corpo p{padding:0 18px}
+  .corpos .corpo h3{margin-top:14px}
+  .corpos .corpo p{padding-bottom:18px}
+  .cuidados{margin:18px 0 22px}
 </style>
 </head>
 <body>
@@ -141,6 +147,7 @@
     <a class="sec" href="#hoje">What exists today</a>
     <a class="sec" href="#espera">The wait</a>
     <a class="sec" href="#opcoes">Two options</a>
+    <a class="sec" href="#corpos">Other bodies</a>
     <a class="sec" href="#tecnico">Kit (technical)</a>
     <span class="lang"><a href="../">PT</a><a class="on" href="./">EN</a><a href="../es/">ES</a></span>
     <button class="tgl" id="themeToggle" aria-label="Toggle theme" title="Toggle theme">🌙</button>
@@ -176,7 +183,15 @@
   <figure><img src="../assets/banner-grade-en.jpg" alt="Banner with six cards: ready-to-use board with no soldering, listens and replies with speech, captions on screen, understands photos through the camera, brain on your computer, open source" loading="lazy"><figcaption style="padding:10px 14px;font-size:.85rem;color:var(--mut);background:var(--card)">Illustrative artwork.</figcaption></figure>
 </div></section>
 
-<!-- VIDEO: project explainer video goes here once published -->
+<section id="video"><div class="wrap">
+  <span class="chip">In video</span>
+  <h2>The desktop robot in 1 minute</h2>
+  <p class="mut">Nei shows the board, the server on your computer, and what already works today.</p>
+  <div style="max-width:360px;margin:18px auto 0;aspect-ratio:9/16;border:1px solid var(--line);border-radius:14px;overflow:hidden;background:#000">
+    <iframe src="https://www.youtube.com/embed/ckhcNbClXNs" title="Video of the CoreS3 Lite desktop robot on YouTube" style="width:100%;height:100%;border:0;display:block" loading="lazy" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
+  </div>
+  <p class="mut" style="text-align:center;font-size:.85rem;margin-top:10px"><a class="amb" href="https://www.youtube.com/watch?v=ckhcNbClXNs">youtube.com/watch?v=ckhcNbClXNs</a></p>
+</div></section>
 
 <section id="ideia"><div class="wrap">
   <span class="chip">The idea</span>
@@ -230,6 +245,28 @@
     </tbody>
   </table></div>
 </div></section>
+
+<section id="corpos"><div class="wrap">
+  <span class="chip">Ideas · bodies for other robots</span>
+  <h2>What if it had a body?</h2>
+  <p class="sub">The CoreS3 Lite could be the head and face of a robot that walks, turns, or performs tasks: it listens, speaks, sees, and displays things; the AI understands and decides; the body moves and takes care of its own safety. <strong>These are ideas: none of this has been built.</strong> The images are illustrations.</p>
+  <div class="flow"><span>You speak</span><span>→ Head: listens, sees, displays things</span><span>→ Brain on the PC: understands and chooses a command</span><span>→ Body: walks, turns, picks things up</span></div>
+  <div class="grid g3 cuidados">
+    <div class="card"><h3>Closed list of commands</h3><p>The AI only chooses from known actions, within limits (walking at most 50 cm at a time). The server discards anything else. Speech never becomes code.</p></div>
+    <div class="card"><h3>The body brakes, not the AI</h3><p>The response takes about 7 seconds. The kit’s own distance sensor stops the robot before it hits anything, in milliseconds.</p></div>
+    <div class="card"><h3>Powering the body</h3><p>The board’s battery is small. The head is powered by the kit’s battery through USB-C.</p></div>
+  </div>
+  <div class="grid g3 corpos">
+    <div class="card corpo"><img src="../assets/corpos/humanoide.jpg" alt="Small servo humanoid with the CoreS3 Lite as its head" loading="lazy"><h3>1. Workshop humanoid</h3><p>“Wave to the visitor.” The AI chooses a recorded gesture (waving, pointing, dancing) and speaks along with it. Great for classes and presentations.</p></div>
+    <div class="card corpo"><img src="../assets/corpos/carrinho.jpg" alt="Four-wheeled cart with the CoreS3 Lite on a mast" loading="lazy"><h3>2. Follow-me cart</h3><p>“Come with me.” The board tracks your face; the AI chooses a direction based on photos; the cart brakes on its own. The easiest one to start with.</p></div>
+    <div class="card corpo"><img src="../assets/corpos/cao.jpg" alt="Quadruped robot dog with the CoreS3 Lite as its head" loading="lazy"><h3>3. Robot dog</h3><p>“Sit.” “Shake.” The kit already knows how to walk; the head recognizes its owner and gives the character a voice. The one that delights children the most.</p></div>
+    <div class="card corpo"><img src="../assets/corpos/braco.jpg" alt="Desktop robotic arm holding a pen, with the CoreS3 Lite at the base" loading="lazy"><h3>4. Desk-assistant arm</h3><p>“Pass me the blue pen.” The AI finds the pen in the photo and the arm picks it up. The most useful physical task, and the hardest: it requires calibrating the camera and arm.</p></div>
+    <div class="card corpo"><img src="../assets/corpos/giratoria.jpg" alt="Rotating base with two servos and the CoreS3 Lite on top" loading="lazy"><h3>5. Head that turns toward whoever is speaking</h3><p>Two servos: the board finds your face and the base turns to look at you. The cheapest and safest first step.</p></div>
+    <div class="card corpo"><img src="../assets/corpos/jardim.jpg" alt="Garden cart with a water reservoir and the CoreS3 Lite on a mast" loading="lazy"><h3>6. Balcony gardener</h3><p>“Water the basil.” The AI sees which pot is dry; the cart goes to it and turns on the pump for a few seconds.</p></div>
+  </div>
+  <p class="sub" style="margin-top:18px">Suggested order: 5 → 2 → 3 or 1 → 4 or 6. Full text, with a drawing of each one, at <a href="https://github.com/inematds/robo-cores3-lite/blob/main/IDEIAS-CORPOS.md" target="_blank" rel="noopener">IDEIAS-CORPOS.md</a>.</p>
+</div></section>
+
 
 <div id="tecnico" class="techhead"><div class="wrap">
   <span class="chip">Technical section</span>

@@ -40,6 +40,7 @@ que compila e mostra a PSRAM.
 | Servidor local (opção B) | [servidor/README.md](servidor/README.md) |
 | Programa da placa | [firmware/README.md](firmware/README.md) |
 | Perguntas e limites (API, placas, câmera, movimento) | [FAQ.md](FAQ.md) |
+| Ideias: a placa como cabeça de outros robôs (6 exemplos ilustrados) | [IDEIAS-CORPOS.md](IDEIAS-CORPOS.md) |
 | Versão anterior (XIAO soldada num cubo de 40 mm) | [arquivo/variante-xiao/](arquivo/variante-xiao/DEFINICAO.md) |
 | Retomar o trabalho | [handoffs/latest.md](handoffs/latest.md) |
 

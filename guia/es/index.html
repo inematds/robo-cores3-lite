@@ -124,6 +124,12 @@
   .poderes b{display:block;font-family:Sora;font-size:1.15rem;color:var(--amb);letter-spacing:-.01em}
   .poderes span{font-size:.82rem;color:var(--mut);line-height:1.35}
   @media (max-width:640px){.poderes{grid-template-columns:repeat(2,1fr)}}
+  .corpos .corpo{padding:0;overflow:hidden}
+  .corpos .corpo img{width:100%;aspect-ratio:3/2;object-fit:cover;display:block;border-bottom:1px solid var(--line)}
+  .corpos .corpo h3,.corpos .corpo p{padding:0 18px}
+  .corpos .corpo h3{margin-top:14px}
+  .corpos .corpo p{padding-bottom:18px}
+  .cuidados{margin:18px 0 22px}
 </style>
 </head>
 <body>
@@ -141,6 +147,7 @@
     <a class="sec" href="#hoje">Lo que existe hoy</a>
     <a class="sec" href="#espera">La espera</a>
     <a class="sec" href="#opcoes">Dos opciones</a>
+    <a class="sec" href="#corpos">Otros cuerpos</a>
     <a class="sec" href="#tecnico">Kit (técnico)</a>
     <span class="lang"><a href="../">PT</a><a href="../en/">EN</a><a class="on" href="./">ES</a></span>
     <button class="tgl" id="themeToggle" aria-label="Alternar tema" title="Alternar tema">🌙</button>
@@ -176,7 +183,15 @@
   <figure><img src="../assets/banner-grade-es.jpg" alt="Banner con seis tarjetas: placa lista sin soldaduras, escucha y responde con voz, subtítulos en pantalla, entiende fotos con la cámara, cerebro en tu computadora, código abierto" loading="lazy"><figcaption style="padding:10px 14px;font-size:.85rem;color:var(--mut);background:var(--card)">Arte ilustrativo.</figcaption></figure>
 </div></section>
 
-<!-- VIDEO: entra o explicavideo do projeto quando publicado -->
+<section id="video"><div class="wrap">
+  <span class="chip">En video</span>
+  <h2>El robot de escritorio en 1 minuto</h2>
+  <p class="mut">Nei muestra la placa, el servidor en tu computadora y lo que ya funciona hoy.</p>
+  <div style="max-width:360px;margin:18px auto 0;aspect-ratio:9/16;border:1px solid var(--line);border-radius:14px;overflow:hidden;background:#000">
+    <iframe src="https://www.youtube.com/embed/ckhcNbClXNs" title="Video del robot de escritorio CoreS3 Lite en YouTube" style="width:100%;height:100%;border:0;display:block" loading="lazy" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
+  </div>
+  <p class="mut" style="text-align:center;font-size:.85rem;margin-top:10px"><a class="amb" href="https://www.youtube.com/watch?v=ckhcNbClXNs">youtube.com/watch?v=ckhcNbClXNs</a></p>
+</div></section>
 
 <section id="ideia"><div class="wrap">
   <span class="chip">La idea</span>
@@ -230,6 +245,28 @@
     </tbody>
   </table></div>
 </div></section>
+
+<section id="corpos"><div class="wrap">
+  <span class="chip">Ideas · cuerpos de otros robots</span>
+  <h2>¿Y si tuviera un cuerpo?</h2>
+  <p class="sub">La CoreS3 Lite puede ser la cabeza y el rostro de un robot que camina, gira o realiza tareas: escucha, habla, ve y muestra; la IA entiende y decide; el cuerpo se mueve y cuida su propia seguridad. <strong>Son ideas: nada de esto se ha construido.</strong> Las imágenes son ilustraciones.</p>
+  <div class="flow"><span>Tú hablas</span><span>→ Cabeza: escucha, ve, muestra</span><span>→ Cerebro en la PC: entiende y elige un comando</span><span>→ Cuerpo: camina, gira, agarra</span></div>
+  <div class="grid g3 cuidados">
+    <div class="card"><h3>Lista cerrada de comandos</h3><p>La IA solo elige entre acciones conocidas, con un límite (caminar como máximo 50 cm por vez). El servidor descarta el resto. El habla nunca se convierte en código.</p></div>
+    <div class="card"><h3>Freno en el cuerpo, no en la IA</h3><p>La respuesta tarda unos 7 s. Quien se detiene antes de chocar es el sensor de distancia del propio kit, en milisegundos.</p></div>
+    <div class="card"><h3>Energía del cuerpo</h3><p>La batería de la placa es pequeña. La cabeza se alimenta de la batería del kit, por el USB-C.</p></div>
+  </div>
+  <div class="grid g3 corpos">
+    <div class="card corpo"><img src="../assets/corpos/humanoide.jpg" alt="Humanoide pequeño de servos con la CoreS3 Lite como cabeza" loading="lazy"><h3>1. Humanoide de taller</h3><p>“Saluda a la visita.” La IA elige un gesto grabado (saludar, señalar, bailar) y habla al mismo tiempo. Ideal para clases y presentaciones.</p></div>
+    <div class="card corpo"><img src="../assets/corpos/carrinho.jpg" alt="Carrito de cuatro ruedas con la CoreS3 Lite en un mástil" loading="lazy"><h3>2. Carrito que te sigue</h3><p>“Ven conmigo.” La placa sigue tu rostro; la IA elige el rumbo mediante fotos; el carrito frena solo. Lo más fácil para empezar.</p></div>
+    <div class="card corpo"><img src="../assets/corpos/cao.jpg" alt="Perro robot cuadrúpedo con la CoreS3 Lite como cabeza" loading="lazy"><h3>3. Perro robot</h3><p>“Siéntate.” “Dame la pata.” El kit ya sabe caminar; la cabeza reconoce a su dueño y le da voz al personaje. El que más encanta a los niños.</p></div>
+    <div class="card corpo"><img src="../assets/corpos/braco.jpg" alt="Brazo robótico de mesa sosteniendo un bolígrafo, con la CoreS3 Lite en la base" loading="lazy"><h3>4. Brazo que ayuda en la mesa</h3><p>“Pásame el bolígrafo azul.” La IA encuentra el bolígrafo en la foto y el brazo lo agarra. La tarea física más útil y la más difícil: requiere calibrar la cámara y el brazo.</p></div>
+    <div class="card corpo"><img src="../assets/corpos/giratoria.jpg" alt="Base giratoria de dos servos con la CoreS3 Lite en la parte superior" loading="lazy"><h3>5. Cabeza que gira hacia quien habla</h3><p>Dos servos: la placa encuentra el rostro y la base gira para mirarte. El primer paso más barato y seguro.</p></div>
+    <div class="card corpo"><img src="../assets/corpos/jardim.jpg" alt="Carrito de jardín con depósito de agua y la CoreS3 Lite en un mástil" loading="lazy"><h3>6. Jardinero de balcón</h3><p>“Riega la albahaca.” La IA ve qué maceta está seca; el carrito va hasta ella y enciende la bomba durante unos segundos.</p></div>
+  </div>
+  <p class="sub" style="margin-top:18px">Orden sugerido: 5 → 2 → 3 o 1 → 4 o 6. Texto completo, con el dibujo de cada uno, en <a href="https://github.com/inematds/robo-cores3-lite/blob/main/IDEIAS-CORPOS.md" target="_blank" rel="noopener">IDEIAS-CORPOS.md</a>.</p>
+</div></section>
+
 
 <div id="tecnico" class="techhead"><div class="wrap">
   <span class="chip">Parte técnica</span>
