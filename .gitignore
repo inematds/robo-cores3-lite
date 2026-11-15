@@ -16,3 +16,4 @@ firmware/**/build/
 
 # CAD: temporários
 .preview/
+servidor/teste/resposta-conversa.wav
