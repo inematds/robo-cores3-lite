@@ -5,7 +5,7 @@ obrigatória. O porquê da escolha está na [DEFINICAO.md](DEFINICAO.md), seçã
 
 | # | Item | Quantidade | Preço | Onde |
 |---|---|---|---|---|
-| 1 | **M5Stack CoreS3 Lite** (ESP32-S3, tela de 2" com toque, câmera GC0308, dois microfones, falante de 1 W, bateria de 200 mAh) | 1 | US$ 44,90 de tabela em jul/2025. Em reais: **estimativa, não conferida** | [loja oficial M5Stack no AliExpress](https://pt.aliexpress.com/item/1005009527295120.html) |
+| 1 | **M5Stack CoreS3 Lite** (ESP32-S3, tela de 2" com toque, câmera GC0308, dois microfones, falante de 1 W, bateria de 200 mAh) | 1 | **R$ 256,55** (com desconto; cheio R$ 283,01), lido no link do anúncio em 15/11/2026, sem frete nem imposto. Outro vendedor pedia R$ 384,88 pela mesma placa | [loja oficial M5Stack no AliExpress](https://pt.aliexpress.com/item/1005009527295120.html) |
 | 2 | Cabo USB-C que passe dados (não só carga), 1 m ou mais | 1 | provavelmente já tem | — |
 | 3 | Fonte USB de 5 V e 1 A ou mais | 1 | provavelmente já tem | — |
 
@@ -14,7 +14,7 @@ obrigatória. O porquê da escolha está na [DEFINICAO.md](DEFINICAO.md), seçã
 - O nome tem de ser **CoreS3 Lite** (ou **CoreS3**, a completa). **CoreS3 SE não tem câmera.**
 - Nas especificações tem de aparecer **GC0308** ou "camera".
 - Some frete e imposto ao preço.
-- Me diga o preço em reais que aparece para você: ele entra aqui como preço lido.
+- Compre da **loja oficial M5Stack** (link acima). Outros vendedores cobram mais pela mesma placa.
 
 ## Opcional, depois
 

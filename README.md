@@ -24,7 +24,7 @@ esqueleto que compila e mostra a PSRAM.
 ## Em números
 
 - Placa: 54 × 54 × 16,5 mm, 54 g. Tela de 2", 320 × 240, com toque. Câmera de 0,3 MP. Bateria de 200 mAh.
-- Preço de tabela: US$ 44,90 (jul/2025). Em reais: estimativa, não conferida.
+- Preço: R$ 256,55 na loja oficial M5Stack do AliExpress (lido em 15/11/2026, sem frete nem imposto).
 - Áudio: 16 kHz, 16 bits, mono, nos dois sentidos. Fala de até 15 s.
 - `claude -p` respondeu em 5,0 s (uma medida, 14/11). O tempo total da opção B ainda não foi medido.
 

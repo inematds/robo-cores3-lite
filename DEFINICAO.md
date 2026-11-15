@@ -80,7 +80,7 @@ Especificações lidas na matéria da CNX Software de 22/07/2025 (seção 13), n
 | Energia | USB-C 5 V, bateria interna de 200 mAh, controlador AXP2101 |
 | Expansão | Uma porta Grove I²C, microSD |
 | Tamanho e peso | 54 × 54 × 16,5 mm, 54 g; traseira magnética |
-| Preço de tabela | US$ 44,90 em julho de 2025 (CNX). Em reais: não conferido |
+| Preço | US$ 44,90 de tabela em jul/2025 (CNX). R$ 256,55 na loja oficial do AliExpress, lido em 15/11/2026, sem frete nem imposto |
 
 Comparação com as outras placas vistas em 15/11/2026:
 
