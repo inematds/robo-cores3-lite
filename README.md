@@ -18,6 +18,7 @@ esqueleto que compila e mostra a PSRAM.
 | Fases e critério de pronto de cada uma | [PLANO.md](PLANO.md) |
 | Servidor local (opção B) | [servidor/README.md](servidor/README.md) |
 | Programa da placa | [firmware/README.md](firmware/README.md) |
+| Perguntas e limites (API, placas, câmera, movimento) | [FAQ.md](FAQ.md) |
 | Versão anterior (XIAO soldada num cubo de 40 mm) | [arquivo/variante-xiao/](arquivo/variante-xiao/DEFINICAO.md) |
 | Retomar o trabalho | [handoffs/latest.md](handoffs/latest.md) |
 
