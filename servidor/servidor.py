@@ -240,6 +240,35 @@ class ClaudePronto:
 
 CLAUDE = ClaudePronto()
 
+# Trava de cota compartilhada (17/11/2026): mesma tabela `pools` do EngineBridge e do ia_motor.py
+# (~/.local/state/enginebridge/state.sqlite). Falha do banco = segue sem trava.
+COTA_DB = Path(os.environ.get("INEMA_COTA_DB", Path.home() / ".local/state/enginebridge/state.sqlite")).expanduser()
+COTA_POOL = "claude:" + str(Path(os.environ.get("CLAUDE_CONFIG_DIR", Path.home() / ".claude")).expanduser())
+
+
+def cota_travada():
+    import sqlite3
+    try:
+        with sqlite3.connect(COTA_DB, timeout=5) as db:
+            linha = db.execute("SELECT blocked, until FROM pools WHERE pool=?", (COTA_POOL,)).fetchone()
+    except sqlite3.Error:
+        return None
+    if linha and (linha[0] or linha[1] > time.time()):
+        return "claude sem cota (trava compartilhada)"
+    return None
+
+
+def cota_registrar(ate):
+    import sqlite3
+    try:
+        COTA_DB.parent.mkdir(parents=True, exist_ok=True, mode=0o700)
+        with sqlite3.connect(COTA_DB, timeout=5) as db:
+            db.execute("CREATE TABLE IF NOT EXISTS pools (pool TEXT PRIMARY KEY, blocked INTEGER DEFAULT 0, until REAL DEFAULT 0, owner TEXT, lease REAL DEFAULT 0)")
+            db.execute("INSERT INTO pools(pool, until) VALUES (?, ?) ON CONFLICT(pool) DO UPDATE SET until=MAX(pools.until, excluded.until)",
+                       (COTA_POOL, ate))
+    except sqlite3.Error:
+        pass
+
 
 def pensar(robo, ouvido, foto):
     n = int(CFG["HISTORICO_TURNOS"])
@@ -257,6 +286,10 @@ def pensar(robo, ouvido, foto):
     conteudo.append({"type": "text", "text": "\n".join(linhas)})
     entrada = json.dumps({"type": "user", "message": {"role": "user", "content": conteudo}}, ensure_ascii=False)
 
+    cota = cota_travada()
+    if cota:                       # trava de cota compartilhada: sem cota, responde na hora
+        log(cota)
+        raise Recusa(503, "claude sem cota")
     proc = CLAUDE.pegar()
     try:
         saida, erro = proc.communicate(entrada + "\n", timeout=90)
@@ -269,6 +302,9 @@ def pensar(robo, ouvido, foto):
         except json.JSONDecodeError:
             continue
         if d.get("type") == "result":
+            if d.get("is_error") and d.get("api_error") == "usage_limit_reached":
+                cota_registrar(time.time() + 3600)   # sem ler o horário: 1 h; o ia_motor.py grava o exato
+                raise Recusa(503, "claude sem cota")
             if d.get("is_error") or not (d.get("result") or "").strip():
                 raise Recusa(500, "claude")
             return limpar_fala(d["result"])
