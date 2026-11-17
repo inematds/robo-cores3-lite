@@ -62,7 +62,7 @@ Legenda: 🧠 sessão com o Nei · ⚙️ comando/script · 🤖 `claude -p`
 | 1 | Ler a definição e escolher voz e opção | [DEFINICAO.md](DEFINICAO.md), seção 3 | 🧠 | sim |
 | 2 | Comprar a CoreS3 Lite | [LISTA-DE-COMPRAS.md](LISTA-DE-COMPRAS.md) | 🧠 | sim |
 | 3 | Copiar o `.env` do servidor e escolher o token | `cp servidor/env.exemplo servidor/.env` | 🧠 | sim |
-| 4 | Subir o servidor (opção B); ele sobe o Whisper e a voz residentes | `python3 servidor/servidor.py` | ⚙️ | sim |
+| 4 | Subir o servidor (opção B); ele sobe o Whisper e a voz residentes. Fica desligado; ligar só quando for usar o robô (unidade em `servidor/robo-servidor.service`, instalada em `~/.config/systemd/user/`) | `systemctl --user start robo-servidor` (ou `python3 servidor/servidor.py`); parar: `systemctl --user stop robo-servidor` | ⚙️ | sim |
 | 5 | Testar o servidor sem o robô, com e sem foto | `python3 servidor/testar.py servidor/teste/pergunta.wav` (e `--foto`, `--limites`) | ⚙️ | sim |
 | 5b | Gravar as frases de espera na voz do robô (só uma vez, ou ao trocar a voz) | `python3 servidor/gerar_espera.py` | ⚙️ | sim (32 frases) |
 | 6 | Dentro de cada turno: escrever a resposta | `claude -p --model haiku --tools "" --strict-mcp-config --no-session-persistence …` | 🤖 | comando testado |
